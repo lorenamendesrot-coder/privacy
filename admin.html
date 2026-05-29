@@ -980,7 +980,7 @@ function renderList(medias) {
     <div class="media-row${SELECTED_IDS.has(m.id) ? ' selected' : ''}" id="row-${m.id}" onclick="SELECT_MODE && toggleRowSelect('${m.id}')" style="${SELECT_MODE ? 'cursor:pointer' : ''}">
       ${SELECT_MODE ? `<input type="checkbox" class="media-checkbox" id="chk-${m.id}" ${SELECTED_IDS.has(m.id) ? 'checked' : ''} onchange="toggleRowSelect('${m.id}')" onclick="event.stopPropagation()">` : ''}
       <div class="media-thumb">
-        ${m.thumbnail ? `<img src="${esc(m.thumbnail)}" onerror="this.parentElement.textContent='${typeEmoji(m.type)}'">` : typeEmoji(m.type)}
+        ${m.thumbnail ? `<img src="${esc(m.thumbnail)}" onerror="this.parentElement.innerHTML=makeSvgThumb(${JSON.stringify(m.title||'')})">` : (m.type === 'video' ? `<img src="${makeSvgThumb(m.title||m.url||'')}">` : typeEmoji(m.type))}
       </div>
       <div class="media-info">
         <div class="media-title-text">${esc(m.title || 'Sem título')}</div>
@@ -1092,58 +1092,107 @@ async function deleteSelectedMedias() {
 // ── AUTO THUMBNAIL ────────────────────────────────────────────
 var _thumbCaptureTimer = null;
 function autoCaptureThumbnail(url) {
-  var status = document.getElementById('fThumbStatus');
-  var preview = document.getElementById('fThumbPreview');
+  var status    = document.getElementById('fThumbStatus');
+  var preview   = document.getElementById('fThumbPreview');
   var thumbInput = document.getElementById('fThumb');
 
   clearTimeout(_thumbCaptureTimer);
 
-  // Limpa se URL vazia ou não for vídeo
   if (!url || !url.match(/\.(mp4|webm|mov)/i)) {
-    if (status) { status.textContent = ''; }
-    if (preview) { preview.style.display = 'none'; }
+    if (status)  status.textContent = '';
+    if (preview) preview.style.display = 'none';
     return;
   }
 
-  // Se já tem thumbnail manual, não sobrescreve
   if (thumbInput.value.trim()) return;
 
   if (status) status.textContent = '⏳ Gerando thumbnail...';
 
+  // ── helpers ──────────────────────────────────────────────────
+  function applyThumb(dataUrl, label) {
+    thumbInput.value = dataUrl;
+    if (status)  status.textContent = label;
+    if (preview) {
+      document.getElementById('fThumbImg').src = dataUrl;
+      preview.style.display = 'block';
+    }
+  }
+
+  // Fase 3 — SVG placeholder com gradiente (sempre funciona)
+  function fallbackSvgThumb() {
+    var filename = url.split('/').pop().split('?')[0].replace(/\.[^.]+$/, '') || 'Vídeo';
+    var label    = decodeURIComponent(filename).slice(0, 28);
+    var svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1a1a1a"/>
+          <stop offset="100%" stop-color="#2d1a0e"/>
+        </linearGradient>
+      </defs>
+      <rect width="320" height="180" fill="url(#g)" rx="8"/>
+      <polygon points="128,70 128,110 168,90" fill="#f6841c" opacity=".9"/>
+      <text x="160" y="140" font-family="sans-serif" font-size="12" fill="#aaa" text-anchor="middle">${label}</text>
+    </svg>`;
+    var b64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    applyThumb(b64, '🎨 Capa gerada');
+  }
+
+  // Fase 2 — microlink.io (screenshot da URL do vídeo)
+  async function tryMicrolink() {
+    try {
+      var apiUrl = 'https://api.microlink.io/?url=' + encodeURIComponent(url) + '&screenshot=true&meta=false&embed=screenshot.url&type=jpeg';
+      var res = await fetch(apiUrl);
+      var json = await res.json();
+      var imgUrl = json?.data?.screenshot?.url;
+      if (imgUrl) {
+        applyThumb(imgUrl, '✅ Thumbnail gerada!');
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // Fase 1 — canvas (funciona se o servidor tiver CORS liberado)
   _thumbCaptureTimer = setTimeout(function() {
     var vid = document.createElement('video');
     vid.crossOrigin = 'anonymous';
     vid.preload = 'metadata';
     vid.muted = true;
-    vid.src = url + '#t=0.5';
+    vid.src = url + '#t=1';
+    var done = false;
 
-    vid.addEventListener('loadedmetadata', function() { vid.currentTime = 0.5; });
+    vid.addEventListener('loadedmetadata', function() { vid.currentTime = 1; });
 
     vid.addEventListener('seeked', function() {
+      if (done) return; done = true;
       try {
         var canvas = document.createElement('canvas');
-        canvas.width = vid.videoWidth || 320;
+        canvas.width  = vid.videoWidth  || 320;
         canvas.height = vid.videoHeight || 180;
         canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-        if (dataUrl && dataUrl.length > 1000) {
-          if (thumbInput) thumbInput.value = dataUrl;
-          if (status) status.textContent = '✅ Thumbnail gerada!';
-          if (preview) {
-            document.getElementById('fThumbImg').src = dataUrl;
-            preview.style.display = 'block';
-          }
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        if (dataUrl && dataUrl.length > 2000) {
+          applyThumb(dataUrl, '✅ Thumbnail gerada!');
         } else {
-          if (status) status.textContent = '⚠️ Não foi possível gerar';
+          throw new Error('blank');
         }
       } catch(e) {
-        if (status) status.textContent = '⚠️ CORS não liberado no servidor';
+        // CORS falhou → tenta microlink
+        if (status) status.textContent = '⏳ Buscando capa...';
+        tryMicrolink().then(function(ok) { if (!ok) fallbackSvgThumb(); });
       }
     });
 
     vid.addEventListener('error', function() {
-      if (status) status.textContent = '⚠️ Não foi possível carregar o vídeo';
+      if (done) return; done = true;
+      if (status) status.textContent = '⏳ Buscando capa...';
+      tryMicrolink().then(function(ok) { if (!ok) fallbackSvgThumb(); });
     });
+
+    // timeout de segurança: se o vídeo não carregar em 6s, vai pro microlink
+    setTimeout(function() {
+      if (!done) { done = true; tryMicrolink().then(function(ok) { if (!ok) fallbackSvgThumb(); }); }
+    }, 6000);
   }, 600);
 }
 
@@ -1298,6 +1347,12 @@ function abrirToken() { window.open(lastTokenUrl, '_blank'); }
 
 // ── UTILS ──
 function typeEmoji(type) { return type === 'video' ? '🎥' : type === 'photo' ? '🖼️' : '💰'; }
+
+function makeSvgThumb(label) {
+  var text = (label || 'Vídeo').slice(0, 22);
+  var svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1a1a1a"/><stop offset="100%" stop-color="#2d1a0e"/></linearGradient></defs><rect width="320" height="180" fill="url(#g)" rx="8"/><polygon points="128,70 128,110 168,90" fill="#f6841c" opacity=".9"/><text x="160" y="145" font-family="sans-serif" font-size="13" fill="#999" text-anchor="middle">${text}</text></svg>`;
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
 function enc(s) { return encodeURIComponent(s); }
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
