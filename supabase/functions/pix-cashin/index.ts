@@ -1,97 +1,126 @@
 // supabase/functions/pix-cashin/index.ts
-// Gera cobrança PIX via SyncPayments
-// POST /functions/v1/pix-cashin
-// Body: { amount }
-
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const CORS = {
-  "Content-Type": "application/json",
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYNCPAY_BASE = "https://api.syncpayments.com.br";
+// ── Gateways ────────────────────────────────────────────────────
 
-let _tokenCache: { token: string | null; expiresAt: number } = { token: null, expiresAt: 0 };
-
-async function getToken(clientId: string, clientSecret: string): Promise<string> {
-  const now = Date.now();
-  if (_tokenCache.token && now < _tokenCache.expiresAt - 60_000) return _tokenCache.token!;
-
-  const r = await fetch(`${SYNCPAY_BASE}/api/partner/v1/auth-token`, {
+async function cashinSyncpay(cfg: any, amount: number, webhookUrl: string | null) {
+  const authRes = await fetch("https://api.syncpayments.com.br/api/partner/v1/auth-token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
+    body: JSON.stringify({ client_id: cfg.syncpay_client_id, client_secret: cfg.syncpay_client_secret }),
   });
-  if (!r.ok) throw new Error(`SyncPayments auth falhou (${r.status}): ${await r.text()}`);
-  const d = await r.json();
-  _tokenCache = { token: d.access_token, expiresAt: now + (d.expires_in ?? 3600) * 1000 };
-  return _tokenCache.token!;
+  if (!authRes.ok) throw new Error("SyncPay auth falhou: " + await authRes.text());
+  const { access_token } = await authRes.json();
+
+  const payload: any = { amount, description: "Acesso ao conteúdo" };
+  if (webhookUrl) payload.webhook_url = webhookUrl;
+
+  const res = await fetch("https://api.syncpayments.com.br/api/partner/v1/cash-in", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json", "Authorization": `Bearer ${access_token}` },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Erro SyncPay");
+  return { pix_code: data.pix_code, identifier: data.identifier };
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("", { status: 204, headers: CORS });
-  if (req.method !== "POST") return json({ error: "Method Not Allowed" }, 405);
+async function cashinNexuspag(cfg: any, amount: number, webhookUrl: string | null) {
+  const base = cfg.nexuspag_sandbox
+    ? "https://sandbox.api.nexuspag.com.br"
+    : "https://api.nexuspag.com.br";
 
-  let body: any;
-  try { body = await req.json(); } catch { return json({ error: "JSON inválido" }, 400); }
+  const amountCents = Math.round(amount * 100);
+  const payload: any = { amount: amountCents, description: "Acesso ao conteúdo" };
+  if (webhookUrl) payload.webhook_url = webhookUrl;
 
-  const amount = parseFloat(String(body.amount || "0").replace(",", "."));
-  if (!amount || amount <= 0) return json({ error: "Informe um valor válido" }, 422);
+  const res = await fetch(base + "/v1/pix/cashin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": cfg.nexuspag_api_key },
+    body: JSON.stringify(payload),
+  });
+  const rawText = await res.text();
+  let data: any;
+  try { data = JSON.parse(rawText); } catch { throw new Error("NexusPag retornou: " + rawText); }
+  if (!res.ok) throw new Error(data.message || data.error || "Erro NexusPag (status " + res.status + ")");
+  return {
+    pix_code: data.pix_code || data.qr_code || data.payload || data.brcode,
+    identifier: data.id || data.transaction_id || data.txid,
+  };
+}
 
-  // Lê credenciais do gateway_config no Supabase
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+async function cashinAsaas(cfg: any, amount: number) {
+  const base = cfg.asaas_sandbox ? "https://sandbox.asaas.com/api/v3" : "https://api.asaas.com/api/v3";
+  const headers: any = { "Content-Type": "application/json", "access_token": cfg.asaas_api_key };
+  const dueDate = new Date(Date.now() + 30 * 60 * 1000).toISOString().split("T")[0];
+  const res = await fetch(base + "/payments", {
+    method: "POST", headers,
+    body: JSON.stringify({ billingType: "PIX", value: amount, dueDate, description: "Acesso ao conteúdo" }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error((data.errors && data.errors[0]?.description) || "Erro Asaas");
+  const qrRes = await fetch(base + "/payments/" + data.id + "/pixQrCode", { headers });
+  const qrData = await qrRes.json();
+  return { pix_code: qrData.payload, identifier: data.id };
+}
 
-  const { data: cfgRow } = await supabase
-    .from("site_config")
-    .select("value")
-    .eq("key", "gateway_config")
-    .maybeSingle();
+// ── Main ────────────────────────────────────────────────────────
 
-  const cfg = cfgRow?.value as Record<string, string> | null;
-  const clientId     = cfg?.syncpay_client_id;
-  const clientSecret = cfg?.syncpay_client_secret;
-  const siteUrl      = (cfg?.site_url || "").replace(/\/$/, "");
-
-  if (!clientId || !clientSecret) {
-    return json({ error: "Credenciais SyncPayments não configuradas no painel admin" }, 500);
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
-    const token = await getToken(clientId, clientSecret);
-    const webhookUrl = siteUrl ? `${siteUrl}/functions/v1/pix-webhook` : null;
+    const { amount } = await req.json();
+    if (!amount || isNaN(parseFloat(amount))) {
+      return new Response(JSON.stringify({ error: "Campo obrigatório: amount" }), {
+        status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const payload: any = {
-      amount,
-      description: "Acesso ao conteúdo",
-      client: { name: "Cliente", cpf: "00000000000", email: "cliente@privacidade.com", phone: "00000000000" },
-    };
-    if (webhookUrl) payload.webhook_url = webhookUrl;
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    const r = await fetch(`${SYNCPAY_BASE}/api/partner/v1/cash-in`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
+    const { data: row } = await sb
+      .from("site_config").select("value").eq("key", "gateway_config").maybeSingle();
+
+    const cfg = row?.value || {};
+    const gateway = cfg.gateway || "syncpay";
+    const siteUrl = cfg.site_url || "";
+    const webhookUrl = siteUrl ? `${siteUrl}/api/pix-webhook` : null;
+    const amt = parseFloat(amount);
+
+    let result;
+    if (gateway === "nexuspag") {
+      if (!cfg.nexuspag_api_key) throw new Error("API key NexusPag não configurada.");
+      result = await cashinNexuspag(cfg, amt, webhookUrl);
+    } else if (gateway === "asaas") {
+      if (!cfg.asaas_api_key) throw new Error("API key Asaas não configurada.");
+      result = await cashinAsaas(cfg, amt);
+    } else {
+      if (!cfg.syncpay_client_id || !cfg.syncpay_client_secret) throw new Error("Credenciais SyncPay não configuradas.");
+      result = await cashinSyncpay(cfg, amt, webhookUrl);
+    }
+
+    return new Response(JSON.stringify({ ok: true, ...result }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-    const data = await r.json();
-    if (!r.ok) return json({ error: data.message || "Erro ao gerar cobrança", details: data.errors }, r.status);
-
-    return json({ ok: true, pix_code: data.pix_code, identifier: data.identifier });
   } catch (err: any) {
-    console.error("[pix-cashin]", err);
-    return json({ error: err.message }, 500);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: CORS });
-}
