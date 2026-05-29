@@ -599,12 +599,15 @@ window.addEventListener('DOMContentLoaded', function() {
   if (saved) {
     try {
       var s = JSON.parse(saved);
-      if (s && s.access_token) {
+      // Supabase pode retornar token direto ou aninhado em session
+      var token = s.access_token || (s.session && s.session.access_token);
+      if (token) {
+        if (!s.access_token) s.access_token = token;
         currentUser = s;
         showMembers();
         return;
       }
-    } catch(e) {}
+    } catch(e) { console.error('Erro ao restaurar sessão:', e); }
   }
 
   showAuth();
@@ -726,14 +729,16 @@ function showAuth() {
 
 function showMembers() {
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('membersScreen').style.display = '';
+  var ms = document.getElementById('membersScreen');
+  ms.style.display = 'block';
 
   // Topbar
-  var email = currentUser.user && currentUser.user.email || '';
+  var email = (currentUser.user && currentUser.user.email) || currentUser.email || '';
   document.getElementById('topbarEmail').textContent = email;
   document.getElementById('topbarUser').style.display = 'flex';
 
-  loadVideos();
+  // Garante que o DOM está visível antes de renderizar
+  setTimeout(loadVideos, 50);
 }
 
 // ── VÍDEOS ────────────────────────────────────────────────────
