@@ -90,7 +90,11 @@
 
       fetch(SUPABASE_URL + '/functions/v1/pix-cashin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': 'Bearer ' + SUPABASE_ANON
+        },
         body: JSON.stringify(Object.assign(
           { amount: _selectedPrice, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
           cfg // passa todas as credenciais da config (client_id, api_key, etc.)
