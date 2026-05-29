@@ -1,5 +1,5 @@
 // functions/api/admin-media.js
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "../../lib/supabase.js";
 
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Não autorizado" }), {

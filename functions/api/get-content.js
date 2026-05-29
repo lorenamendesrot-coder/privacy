@@ -1,5 +1,5 @@
 // functions/api/get-content.js
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "../../lib/supabase.js";
 
 export async function onRequest({ request, env }) {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);

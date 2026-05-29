@@ -1,5 +1,5 @@
 // functions/api/admin-profile.js
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "../../lib/supabase.js";
 
 const HEADERS = {
   "Content-Type": "application/json",
