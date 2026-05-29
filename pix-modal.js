@@ -88,7 +88,7 @@
         return;
       }
 
-      fetch('/api/pix-cashin', {
+      fetch(SUPABASE_URL + '/functions/v1/pix-cashin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign(
