@@ -495,10 +495,6 @@
             <label>Título (opcional)</label>
             <input id="fTitle" type="text" placeholder="Vídeo exclusivo 1">
           </div>
-          <div class="field full">
-            <label>Legenda (opcional)</label>
-            <input id="fDescription" type="text" placeholder="Uma descrição curta do vídeo...">
-          </div>
           <div class="field">
             <label>Tipo *</label>
             <select id="fType">
@@ -773,8 +769,20 @@ function applyProfile(cfg) {
   // PrimePag
   setVal('pPrimepagClientId',     cfg.primepag_client_id     || '');
   setVal('pPrimepagClientSecret', cfg.primepag_client_secret || '');
-  // Popula cache com todos os valores carregados ANTES de chamar onGatewayChange
-  _saveCurrentGwToCache();
+  // Popula cache diretamente da config (independe de display:none nos blocos)
+  _gwCache['pSyncpayClientId']     = cfg.syncpay_client_id     || '';
+  _gwCache['pSyncpayClientSecret'] = cfg.syncpay_client_secret || '';
+  _gwCache['pNexuspagApiKey']          = cfg.nexuspag_api_key         || '';
+  _gwCache['pNexuspagWebhookSecret']   = cfg.nexuspag_webhook_secret  || '';
+  _gwCache['pNexuspagSandbox']         = cfg.nexuspag_sandbox ? '1' : '0';
+  _gwCache['pAsaasApiKey']    = cfg.asaas_api_key    || '';
+  _gwCache['pAsaasSandbox']   = cfg.asaas_sandbox    ? '1' : '';
+  _gwCache['pEfibankClientId']     = cfg.efibank_client_id     || '';
+  _gwCache['pEfibankClientSecret'] = cfg.efibank_client_secret || '';
+  _gwCache['pEfibankPixKey']       = cfg.efibank_pix_key       || '';
+  _gwCache['pEfibankSandbox']      = cfg.efibank_sandbox       ? '1' : '';
+  _gwCache['pPrimepagClientId']     = cfg.primepag_client_id     || '';
+  _gwCache['pPrimepagClientSecret'] = cfg.primepag_client_secret || '';
   // Agora aplica o gateway selecionado (esconde/mostra bloco correto)
   onGatewayChange();
   // Webhook URL
@@ -965,14 +973,12 @@ async function addMedia() {
   if (!url) { showToast('URL é obrigatória', 'err'); return; }
   const btn = document.getElementById('btnAdd');
   btn.disabled = true; btn.textContent = 'Adicionando...';
-  const desc = document.getElementById('fDescription').value.trim();
-  const ok = await postMedia({ url, thumbnail: thumb || null, title: title || null, description: desc || null, type, is_free: isFree });
+  const ok = await postMedia({ url, thumbnail: thumb || null, title: title || null, type, is_free: isFree });
   if (ok) {
     showToast('Mídia adicionada! ✓', 'ok');
     document.getElementById('fUrl').value = '';
     document.getElementById('fThumb').value = '';
     document.getElementById('fTitle').value = '';
-    document.getElementById('fDescription').value = '';
     await loadMedias();
   }
   btn.disabled = false; btn.textContent = 'Adicionar';
