@@ -495,6 +495,10 @@
             <label>Título (opcional)</label>
             <input id="fTitle" type="text" placeholder="Vídeo exclusivo 1">
           </div>
+          <div class="field full">
+            <label>Legenda (opcional)</label>
+            <input id="fDescription" type="text" placeholder="Uma descrição curta do vídeo...">
+          </div>
           <div class="field">
             <label>Tipo *</label>
             <select id="fType">
@@ -961,12 +965,14 @@ async function addMedia() {
   if (!url) { showToast('URL é obrigatória', 'err'); return; }
   const btn = document.getElementById('btnAdd');
   btn.disabled = true; btn.textContent = 'Adicionando...';
-  const ok = await postMedia({ url, thumbnail: thumb || null, title: title || null, type, is_free: isFree });
+  const desc = document.getElementById('fDescription').value.trim();
+  const ok = await postMedia({ url, thumbnail: thumb || null, title: title || null, description: desc || null, type, is_free: isFree });
   if (ok) {
     showToast('Mídia adicionada! ✓', 'ok');
     document.getElementById('fUrl').value = '';
     document.getElementById('fThumb').value = '';
     document.getElementById('fTitle').value = '';
+    document.getElementById('fDescription').value = '';
     await loadMedias();
   }
   btn.disabled = false; btn.textContent = 'Adicionar';
