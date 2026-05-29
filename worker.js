@@ -21,6 +21,13 @@ const ROUTES = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // Redirect /favicon.ico to the actual favicon asset
+    if (url.pathname === '/favicon.ico') {
+      const faviconUrl = new URL('/images/faviconV2.png', url.origin);
+      return env.ASSETS.fetch(new Request(faviconUrl.toString(), request));
+    }
+
     const handler = ROUTES[url.pathname];
     if (handler) {
       return handler({ request, env, ctx });
