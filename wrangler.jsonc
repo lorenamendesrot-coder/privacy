@@ -3,8 +3,6 @@
   "compatibility_date": "2026-05-29",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": ".",
-    "binding": "ASSETS"
-  },
-  "workers_dev": true
+    "directory": "."
+  }
 }
