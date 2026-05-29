@@ -485,11 +485,14 @@
         <div class="form-row">
           <div class="field full">
             <label>URL da mídia (vídeo ou foto) *</label>
-            <input id="fUrl" type="url" placeholder="https://cdn.exemplo.com/video.mp4">
+            <input id="fUrl" type="url" placeholder="https://cdn.exemplo.com/video.mp4" oninput="autoCaptureThumbnail(this.value)">
           </div>
           <div class="field full">
-            <label>URL do thumbnail (opcional)</label>
-            <input id="fThumb" type="url" placeholder="https://cdn.exemplo.com/thumb.jpg">
+            <label>URL do thumbnail (opcional) <span id="fThumbStatus" style="font-weight:400;color:var(--accent);font-size:11px;margin-left:6px;"></span></label>
+            <input id="fThumb" type="url" placeholder="Preenchido automaticamente ao colar URL do vídeo">
+            <div id="fThumbPreview" style="display:none;margin-top:8px;border-radius:8px;overflow:hidden;max-width:200px;aspect-ratio:16/9;background:#000;">
+              <img id="fThumbImg" style="width:100%;height:100%;object-fit:cover;display:block;">
+            </div>
           </div>
           <div class="field">
             <label>Título (opcional)</label>
@@ -964,6 +967,64 @@ function renderList(medias) {
 }
 
 // ── ADD SINGLE ──
+// ── AUTO THUMBNAIL ────────────────────────────────────────────
+var _thumbCaptureTimer = null;
+function autoCaptureThumbnail(url) {
+  var status = document.getElementById('fThumbStatus');
+  var preview = document.getElementById('fThumbPreview');
+  var thumbInput = document.getElementById('fThumb');
+
+  clearTimeout(_thumbCaptureTimer);
+
+  // Limpa se URL vazia ou não for vídeo
+  if (!url || !url.match(/\.(mp4|webm|mov)/i)) {
+    if (status) { status.textContent = ''; }
+    if (preview) { preview.style.display = 'none'; }
+    return;
+  }
+
+  // Se já tem thumbnail manual, não sobrescreve
+  if (thumbInput.value.trim()) return;
+
+  if (status) status.textContent = '⏳ Gerando thumbnail...';
+
+  _thumbCaptureTimer = setTimeout(function() {
+    var vid = document.createElement('video');
+    vid.crossOrigin = 'anonymous';
+    vid.preload = 'metadata';
+    vid.muted = true;
+    vid.src = url + '#t=0.5';
+
+    vid.addEventListener('loadedmetadata', function() { vid.currentTime = 0.5; });
+
+    vid.addEventListener('seeked', function() {
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = vid.videoWidth || 320;
+        canvas.height = vid.videoHeight || 180;
+        canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        if (dataUrl && dataUrl.length > 1000) {
+          if (thumbInput) thumbInput.value = dataUrl;
+          if (status) status.textContent = '✅ Thumbnail gerada!';
+          if (preview) {
+            document.getElementById('fThumbImg').src = dataUrl;
+            preview.style.display = 'block';
+          }
+        } else {
+          if (status) status.textContent = '⚠️ Não foi possível gerar';
+        }
+      } catch(e) {
+        if (status) status.textContent = '⚠️ CORS não liberado no servidor';
+      }
+    });
+
+    vid.addEventListener('error', function() {
+      if (status) status.textContent = '⚠️ Não foi possível carregar o vídeo';
+    });
+  }, 600);
+}
+
 async function addMedia() {
   const url    = document.getElementById('fUrl').value.trim();
   const thumb  = document.getElementById('fThumb').value.trim();
@@ -979,6 +1040,8 @@ async function addMedia() {
     document.getElementById('fUrl').value = '';
     document.getElementById('fThumb').value = '';
     document.getElementById('fTitle').value = '';
+    var p = document.getElementById('fThumbPreview'); if(p) p.style.display='none';
+    var s = document.getElementById('fThumbStatus'); if(s) s.textContent='';
     await loadMedias();
   }
   btn.disabled = false; btn.textContent = 'Adicionar';
