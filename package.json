@@ -1,6 +1,0 @@
-{
-  "name": "privacy-backend",
-  "version": "1.0.0",
-  "description": "Backend para liberação de conteúdo pós-PIX",
-  "type": "module"
-}
