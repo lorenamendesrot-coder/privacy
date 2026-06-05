@@ -93,8 +93,12 @@ export async function onRequest({ request, env }) {
 
     const err = gwRes.error || profileRes.error;
     if (err) {
-      console.error("Supabase write error:", JSON.stringify(err));
-      return new Response(JSON.stringify({ error: err }), { status: 500, headers: HEADERS });
+      const errDetail = {
+        gw_error: gwRes.error ? JSON.stringify(gwRes.error) : null,
+        profile_error: profileRes.error ? JSON.stringify(profileRes.error) : null,
+      };
+      console.error("Supabase write error:", JSON.stringify(errDetail));
+      return new Response(JSON.stringify({ error: errDetail }), { status: 500, headers: HEADERS });
     }
 
     return new Response(JSON.stringify({ ok: true, model_id: modelId }), { status: 200, headers: HEADERS });
