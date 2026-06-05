@@ -19,18 +19,25 @@ export async function onRequest({ request, env }) {
 
   if (secret !== env.ADMIN_SECRET) return unauthorized();
 
-  // GET → lista todas as mídias
+  // MODEL_ID obrigatório para isolar mídias por modelo
+  const modelId = env.MODEL_ID;
+  if (!modelId) {
+    return new Response(JSON.stringify({ error: "MODEL_ID não configurado no ambiente" }), { status: 500, headers });
+  }
+
+  // GET → lista mídias deste modelo
   if (request.method === "GET") {
     const { data, error } = await supabase
       .from("medias")
       .select("*")
+      .eq("model_id", modelId)
       .order("created_at", { ascending: false });
 
     if (error) return new Response(JSON.stringify({ error }), { status: 500, headers });
     return new Response(JSON.stringify(data), { status: 200, headers });
   }
 
-  // POST → adiciona uma mídia
+  // POST → adiciona mídia vinculada a este modelo
   if (request.method === "POST") {
     let body;
     try { body = await request.json(); } catch {
@@ -44,7 +51,7 @@ export async function onRequest({ request, env }) {
 
     const { data, error } = await supabase
       .from("medias")
-      .insert({ url: mediaUrl, thumbnail: thumbnail || null, type, title: title || null, is_free: !!is_free })
+      .insert({ url: mediaUrl, thumbnail: thumbnail || null, type, title: title || null, is_free: !!is_free, model_id: modelId })
       .select()
       .single();
 
@@ -52,12 +59,17 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify(data), { status: 201, headers });
   }
 
-  // DELETE → remove uma mídia por ID
+  // DELETE → remove mídia por ID (só deste modelo)
   if (request.method === "DELETE") {
     const id = url.searchParams.get("id");
     if (!id) return new Response('{"error":"id ausente"}', { status: 400, headers });
 
-    const { error } = await supabase.from("medias").delete().eq("id", id);
+    const { error } = await supabase
+      .from("medias")
+      .delete()
+      .eq("id", id)
+      .eq("model_id", modelId); // segurança: só deleta se for deste modelo
+
     if (error) return new Response(JSON.stringify({ error }), { status: 500, headers });
     return new Response(JSON.stringify({ deleted: true }), { status: 200, headers });
   }

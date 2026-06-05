@@ -98,3 +98,18 @@ INSERT INTO public.site_config (key, value) VALUES (
 ) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   WHERE site_config.value = '{}';
 -- (só sobrescreve se ainda for o valor vazio — preserva config já salva)
+
+
+-- ============================================================
+-- ATUALIZAÇÃO: suporte a múltiplos modelos (MODEL_ID)
+-- Cole esse bloco no SQL Editor do Supabase se já rodou o setup anterior
+-- ============================================================
+
+-- Adiciona coluna model_id na tabela medias
+ALTER TABLE public.medias ADD COLUMN IF NOT EXISTS model_id TEXT;
+
+-- Índice para acelerar buscas por modelo
+CREATE INDEX IF NOT EXISTS idx_medias_model_id ON public.medias (model_id);
+
+-- (Opcional) Se quiser que mídias antigas fiquem vinculadas a um modelo padrão:
+-- UPDATE public.medias SET model_id = 'modelo_a' WHERE model_id IS NULL;

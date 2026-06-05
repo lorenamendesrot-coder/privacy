@@ -41,10 +41,18 @@ export async function onRequest({ request, env }) {
       .eq("id", accessToken.id);
   }
 
-  const { data: medias, error: mediaError } = await supabase
+  // Filtra mídias pelo MODEL_ID da variável de ambiente
+  const modelId = env.MODEL_ID;
+  let query = supabase
     .from("medias")
     .select("id, title, url, thumbnail, type, is_free")
     .order("created_at", { ascending: false });
+
+  if (modelId) {
+    query = query.eq("model_id", modelId);
+  }
+
+  const { data: medias, error: mediaError } = await query;
 
   if (mediaError) {
     return new Response(JSON.stringify({ error: "Erro ao buscar mídias" }), { status: 500, headers });
