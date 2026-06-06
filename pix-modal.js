@@ -9,18 +9,17 @@
   var _selectedPrice = 0;
   var _timerInterval = null;
   var _pixLoading = false; // guard contra chamadas duplicadas
+  var _pollingInterval = null;
+  var _paymentIdentifier = null;
 
   // ── Carrega gateway_config uma vez ──────────────────────
   function loadGwConfig() {
     if (_gwConfig) return Promise.resolve(_gwConfig);
-    // Usa /api/admin-profile — o worker já sabe o MODEL_ID pelo env var do deploy
-    return fetch('/api/admin-profile')
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .then(function (cfg) {
-        window.MODEL_ID = cfg._model_id || window.MODEL_ID || 'default';
-        _gwConfig = cfg;
-        return _gwConfig;
-      })
+    return fetch(SUPABASE_URL + '/rest/v1/site_config?key=eq.gateway_config&select=value', {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+    })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) { _gwConfig = (rows[0] && rows[0].value) || {}; return _gwConfig; })
       .catch(function () { return {}; });
   }
 
@@ -53,7 +52,9 @@
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+    if (_pollingInterval) { clearInterval(_pollingInterval); _pollingInterval = null; }
     _pixLoading = false;
+    _paymentIdentifier = null;
     _gwConfig = null; // limpa cache para sempre buscar config atualizada
   }
 
@@ -95,7 +96,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign(
-          { amount: _selectedPrice, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '', model_id: window.MODEL_ID || 'default' },
+          { amount: _selectedPrice, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
           cfg // passa todas as credenciais da config (client_id, api_key, etc.)
         )),
       })
@@ -108,7 +109,9 @@
             return;
           }
           setElDisplay('pixStatus', 'none');
+          _paymentIdentifier = res.data.identifier || null;
           renderResult(res.data);
+          if (_paymentIdentifier) startPolling(_paymentIdentifier);
         })
         .catch(function() {
           _pixLoading = false;
@@ -140,6 +143,50 @@
     result.innerHTML = html;
     window._pixCode = data.pix_code || '';
     startTimer('pixTimer', 30 * 60);
+  }
+
+  // ── Polling: verifica pagamento aprovado ────────────────
+  function startPolling(identifier) {
+    if (_pollingInterval) clearInterval(_pollingInterval);
+    var attempts = 0;
+    var maxAttempts = 72; // 6 minutos (72 x 5s)
+    _pollingInterval = setInterval(function () {
+      attempts++;
+      if (attempts > maxAttempts) {
+        clearInterval(_pollingInterval);
+        _pollingInterval = null;
+        return;
+      }
+      fetch(SUPABASE_URL + '/rest/v1/access_tokens?payment_id=eq.' + encodeURIComponent(identifier) + '&select=token&limit=1', {
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+      })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (rows) {
+          if (rows && rows.length && rows[0].token) {
+            clearInterval(_pollingInterval);
+            _pollingInterval = null;
+            var token = rows[0].token;
+            // Monta URL de acesso usando site_url do gateway_config
+            loadGwConfig().then(function (cfg) {
+              var siteUrl = (cfg.site_url || window.location.origin).replace(/\/+$/, '');
+              var accessUrl = siteUrl + '/members.html?token=' + token;
+              // Mostra mensagem de sucesso e redireciona
+              var result = document.getElementById('pixResult');
+              if (result) {
+                result.innerHTML = '<div style="text-align:center;padding:24px 0">' +
+                  '<div style="font-size:48px;margin-bottom:12px">🎉</div>' +
+                  '<p style="font-size:16px;font-weight:700;color:#22c55e;margin:0 0 8px">Pagamento confirmado!</p>' +
+                  '<p style="font-size:13px;color:var(--text-dim,#888);margin:0 0 20px">Redirecionando para sua área de membros...</p>' +
+                  '<a href="' + accessUrl + '" style="display:block;padding:14px;background:var(--accent,#e91e8c);color:#fff;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center">Acessar agora →</a>' +
+                  '</div>';
+              }
+              if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+              setTimeout(function () { window.location.href = accessUrl; }, 2000);
+            });
+          }
+        })
+        .catch(function () {}); // silencia erros de rede
+    }, 5000); // verifica a cada 5 segundos
   }
 
   // ── Copiar código ───────────────────────────────────────
