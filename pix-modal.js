@@ -137,6 +137,7 @@
     }
 
     html += '<p id="pixTimer" style="text-align:center;font-size:12px;color:var(--text-dim,#888);margin-top:14px">⏱ Expira em <strong>30:00</strong></p>';
+    html += '<button id="btnJaPaguei" onclick="pixVerificarPagamento()" style="display:block;width:100%;margin-top:10px;padding:13px;background:transparent;color:var(--accent,#e91e8c);border:2px solid var(--accent,#e91e8c);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">✓ Já paguei · Verificar acesso</button>';
 
     result.innerHTML = html;
     window._pixCode = data.pix_code || '';
@@ -186,6 +187,50 @@
         .catch(function () {}); // silencia erros de rede
     }, 5000); // verifica a cada 5 segundos
   }
+
+  // ── Verificação manual de pagamento ─────────────────────
+  window.pixVerificarPagamento = function () {
+    var btn = document.getElementById('btnJaPaguei');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Verificando...'; }
+
+    if (!_paymentIdentifier) {
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Já paguei · Verificar acesso'; }
+      toast('❌ Identificador do pagamento não encontrado.');
+      return;
+    }
+
+    fetch(SUPABASE_URL + '/rest/v1/access_tokens?payment_id=eq.' + encodeURIComponent(_paymentIdentifier) + '&select=token&limit=1', {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
+    })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        if (rows && rows.length && rows[0].token) {
+          var token = rows[0].token;
+          loadGwConfig().then(function (cfg) {
+            var siteUrl = (cfg.site_url || window.location.origin).replace(/\/+$/, '');
+            var accessUrl = siteUrl + '/members.html?token=' + token;
+            var result = document.getElementById('pixResult');
+            if (result) {
+              result.innerHTML = '<div style="text-align:center;padding:24px 0">' +
+                '<div style="font-size:48px;margin-bottom:12px">🎉</div>' +
+                '<p style="font-size:16px;font-weight:700;color:#22c55e;margin:0 0 8px">Pagamento confirmado!</p>' +
+                '<p style="font-size:13px;color:var(--text-dim,#888);margin:0 0 20px">Redirecionando para sua área de membros...</p>' +
+                '<a href="' + accessUrl + '" style="display:block;padding:14px;background:var(--accent,#e91e8c);color:#fff;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;text-align:center">Acessar agora →</a>' +
+                '</div>';
+            }
+            if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+            setTimeout(function () { window.location.href = accessUrl; }, 2000);
+          });
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = '✓ Já paguei · Verificar acesso'; }
+          toast('⏳ Pagamento ainda não confirmado. Aguarde alguns segundos e tente novamente.');
+        }
+      })
+      .catch(function () {
+        if (btn) { btn.disabled = false; btn.textContent = '✓ Já paguei · Verificar acesso'; }
+        toast('❌ Erro de conexão. Tente novamente.');
+      });
+  };
 
   // ── Copiar código ───────────────────────────────────────
   window.pixCopiar = function () {
