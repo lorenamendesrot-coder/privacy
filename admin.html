@@ -747,15 +747,13 @@ function switchTab(name) {
 // ── PROFILE ──
 async function loadProfile() {
   try {
-    // Carrega perfil e gateway_config juntos
-    const [profileRes, gwRes] = await Promise.all([
-      sb.from('site_config').select('value').eq('key', 'profile').maybeSingle(),
-      sb.from('site_config').select('value').eq('key', 'gateway_config').maybeSingle()
-    ]);
-    const profileData = profileRes.data?.value || {};
-    const gwData = gwRes.data?.value || {};
-    // Mescla gateway_config no perfil para applyProfile preencher tudo
-    applyProfile({ ...profileData, ...gwData });
+    const { data: { session } } = await sb.auth.getSession();
+    const headers = { 'Content-Type': 'application/json' };
+    if (session) headers['Authorization'] = 'Bearer ' + session.access_token;
+    const res = await fetch('/api/admin-profile', { headers });
+    if (!res.ok) return;
+    const cfg = await res.json();
+    applyProfile(cfg);
   } catch(e) { /* ignora */ }
 }
 
@@ -935,16 +933,20 @@ async function saveProfile() {
     primepag_client_id:    getVal('pPrimepagClientId'),
     primepag_client_secret:getVal('pPrimepagClientSecret'),
   };
-  const { error: gwError } = await sb.from('site_config').upsert({ key: 'gateway_config', value: gwPayload }, { onConflict: 'key' });
-  if (gwError) { showToast('Erro ao salvar config PIX: ' + gwError.message, 'err'); return; }
-
+  // Envia tudo via /api/admin-profile (salva separado por model_id)
   try {
-    const { error: dbError } = await sb.from('site_config')
-      .upsert({ key: 'profile', value: payload }, { onConflict: 'key' });
-    if (dbError) {
-      showToast('Erro ao salvar: ' + dbError.message, 'err');
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { showToast('Sessão expirada, faça login novamente', 'err'); return; }
+    const res = await fetch('/api/admin-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ ...payload, ...gwPayload }),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      showToast('Erro ao salvar: ' + JSON.stringify(result.error), 'err');
     } else {
-      CURRENT_MODEL_ID = null; // reseta cache ao salvar perfil
+      CURRENT_MODEL_ID = null;
       showToast('Perfil salvo com sucesso! ✓', 'ok');
     }
   } catch(e) {
