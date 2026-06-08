@@ -864,13 +864,12 @@ function toggleFullscreen(btn) {
 }
 
 function shareVideo() {
-  var v = allVideos[currentIndex];
-  if (!v) return;
-  var text = v.title || 'Confira este conteúdo exclusivo!';
+  var mainUrl = window.location.origin + '/';
+  var text = 'Confira este conteúdo exclusivo!';
   if (navigator.share) {
-    navigator.share({ title: text, url: window.location.href }).catch(function() {});
+    navigator.share({ title: text, url: mainUrl }).catch(function() {});
   } else {
-    navigator.clipboard && navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard && navigator.clipboard.writeText(mainUrl);
     showToast('🔗 Link copiado!');
   }
 }
