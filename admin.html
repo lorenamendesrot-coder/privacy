@@ -416,7 +416,10 @@
         <div id="gw-nexuspag" class="gw-fields form-row" style="display:none">
           <div class="field full">
             <label>API Key</label>
-            <input id="pNexuspagApiKey" type="password" placeholder="nxp_live_...">
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="pNexuspagApiKey" type="password" placeholder="nxp_live_..." style="flex:1">
+              <button type="button" onclick="toggleKeyVisibility('pNexuspagApiKey', this)" style="padding:8px 12px;background:var(--card2,#2a2a2a);border:1px solid var(--border,#333);border-radius:8px;color:var(--text,#fff);cursor:pointer;font-size:12px;white-space:nowrap">👁 Revelar</button>
+            </div>
             <div class="field-hint">Painel NexusPag → Integrações → Credenciais API → copie a chave completa</div>
           </div>
           <div class="field full">
@@ -1429,6 +1432,18 @@ function _restoreGwFromCache(gwEl) {
       else input.value = _gwCache[input.id];
     }
   });
+}
+
+function toggleKeyVisibility(fieldId, btn) {
+  var input = document.getElementById(fieldId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈 Ocultar';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁 Revelar';
+  }
 }
 
 function onGatewayChange() {
