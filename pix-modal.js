@@ -11,14 +11,12 @@
   var _pollingInterval = null;
   var _pixLoading = false; // guard contra chamadas duplicadas
 
-  // ── Carrega gateway_config uma vez ──────────────────────
+  // ── Carrega gateway_config via /api/admin-profile (separado por modelo) ──
   function loadGwConfig() {
     if (_gwConfig) return Promise.resolve(_gwConfig);
-    return fetch(SUPABASE_URL + '/rest/v1/site_config?key=eq.gateway_config&select=value', {
-      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON }
-    })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .then(function (rows) { _gwConfig = (rows[0] && rows[0].value) || {}; return _gwConfig; })
+    return fetch('/api/admin-profile')
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (cfg) { _gwConfig = cfg || {}; return _gwConfig; })
       .catch(function () { return {}; });
   }
 
