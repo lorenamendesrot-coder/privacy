@@ -42,6 +42,8 @@ export async function onRequest({ request }) {
 
   try {
     const webhookUrl = site_url ? `${site_url}/api/pix-webhook` : null;
+    // DEBUG: loga a chave sendo usada (primeiros 20 chars)
+    console.log('[pix-cashin] gateway:', gatewayName, '| api_key prefix:', (cfg.nexuspag_api_key || '').substring(0, 20), '| key length:', (cfg.nexuspag_api_key || '').length);
     const result = await gateway.cashin(cfg, amount, webhookUrl);
     return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
   } catch (err) {
