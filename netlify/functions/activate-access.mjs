@@ -14,8 +14,8 @@ export default async function handler(req) {
   const env = process.env;
   const adminHeaders = {
     "Content-Type": "application/json",
-    "apikey": env.SUPABASE_SERVICE_ROLE,
-    "Authorization": `Bearer ${env.SUPABASE_SERVICE_ROLE}`,
+    "apikey": env.SUPABASE_SERVICE_KEY,
+    "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY}`,
   };
 
   try {

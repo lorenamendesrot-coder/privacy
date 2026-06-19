@@ -22,16 +22,16 @@ export async function onRequest({ request, env }) {
   }
 
   const SUPABASE_URL          = env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE = env.SUPABASE_SERVICE_ROLE;
+  const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     return new Response(JSON.stringify({ error: "Variáveis de ambiente não configuradas" }), { status: 500, headers: CORS });
   }
 
   const adminHeaders = {
     "Content-Type": "application/json",
-    "apikey": SUPABASE_SERVICE_ROLE,
-    "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE}`,
+    "apikey": SUPABASE_SERVICE_KEY,
+    "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`,
   };
 
   try {
