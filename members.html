@@ -596,19 +596,36 @@ async function doRegister() {
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Erro ao criar conta.');
-    if (accessToken && data.user) {
-      await fetch('/api/activate-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: accessToken, user_id: data.user.id, email }),
-      }).catch(function() {});
+    if (data.user) {
+      try {
+        await fetch('/api/activate-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: accessToken || null, user_id: data.user.id, email }),
+        });
+      } catch(e) {}
     }
     if (data.access_token) {
       currentUser = data;
       localStorage.setItem(SESSION_KEY, JSON.stringify(data));
       showMembers();
     } else {
-      setMsg('Conta criada! Verifique seu e-mail e faça login.', 'success');
+      // E-mail confirmado automaticamente no passo acima — tenta logar direto
+      try {
+        var loginRes = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+          body: JSON.stringify({ email, password: pass }),
+        });
+        var loginData = await loginRes.json();
+        if (loginRes.ok) {
+          currentUser = loginData;
+          localStorage.setItem(SESSION_KEY, JSON.stringify(loginData));
+          showMembers();
+          return;
+        }
+      } catch(e) {}
+      setMsg('Conta criada! Faça login.', 'success');
       switchTab('login');
     }
   } catch(e) { setMsg(e.message, 'error'); } finally { setLoading(btn, false, 'Criar conta'); }

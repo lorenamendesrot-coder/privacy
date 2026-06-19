@@ -101,9 +101,10 @@ INSERT INTO public.site_config (key, value) VALUES (
 
 
 -- ============================================================
--- ATUALIZAÇÃO: suporte a múltiplos modelos (MODEL_ID)
+-- ATUALIZAÇÃO: vincula o token de pagamento ao usuário cadastrado
 -- Cole esse bloco no SQL Editor do Supabase se já rodou o setup anterior
 -- ============================================================
+ALTER TABLE public.access_tokens ADD COLUMN IF NOT EXISTS user_id UUID;
 
 -- Adiciona coluna model_id na tabela medias
 ALTER TABLE public.medias ADD COLUMN IF NOT EXISTS model_id TEXT;

@@ -1,5 +1,5 @@
 // functions/api/activate-access.js
-// Vincula o token de pagamento ao usuário recém-cadastrado
+// Confirma o e-mail do usuário recém-cadastrado e vincula o token de pagamento
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -17,8 +17,8 @@ export async function onRequest({ request, env }) {
   }
 
   const { token, user_id, email } = body;
-  if (!token || !user_id) {
-    return new Response(JSON.stringify({ error: "token e user_id são obrigatórios" }), { status: 422, headers: CORS });
+  if (!user_id) {
+    return new Response(JSON.stringify({ error: "user_id é obrigatório" }), { status: 422, headers: CORS });
   }
 
   const SUPABASE_URL          = env.SUPABASE_URL;
@@ -28,21 +28,41 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ error: "Variáveis de ambiente não configuradas" }), { status: 500, headers: CORS });
   }
 
+  const adminHeaders = {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_SERVICE_ROLE,
+    "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE}`,
+  };
+
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/activate_member_access`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_SERVICE_ROLE,
-        "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE}`,
-      },
-      body: JSON.stringify({ p_user_id: user_id, p_token: token, p_email: email || null }),
+    // 1) Confirma o e-mail do usuário automaticamente (sem isso o login falha)
+    const confirmRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
+      method: "PUT",
+      headers: adminHeaders,
+      body: JSON.stringify({ email_confirm: true }),
     });
+    if (!confirmRes.ok) {
+      const errData = await confirmRes.json().catch(() => ({}));
+      console.error("[activate-access] falha ao confirmar e-mail:", errData);
+    }
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Erro ao ativar acesso");
+    // 2) Vincula o token de pagamento ao usuário (best-effort, não bloqueia o cadastro)
+    if (token) {
+      const tokenRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/access_tokens?token=eq.${encodeURIComponent(token)}`,
+        {
+          method: "PATCH",
+          headers: { ...adminHeaders, "Prefer": "return=minimal" },
+          body: JSON.stringify({ used_at: new Date().toISOString(), user_id, payer_email: email || null }),
+        }
+      ).catch(() => null);
+      if (tokenRes && !tokenRes.ok) {
+        const errData = await tokenRes.json().catch(() => ({}));
+        console.error("[activate-access] falha ao vincular token:", errData);
+      }
+    }
 
-    return new Response(JSON.stringify(data), { status: 200, headers: CORS });
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS });
   } catch (err) {
     console.error("[activate-access]", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
