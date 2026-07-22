@@ -385,6 +385,7 @@
               <option value="asaas">Asaas</option>
               <option value="efibank">EfiBank</option>
               <option value="primepag">PrimePag</option>
+              <option value="wiinpay">WiinPay</option>
             </select>
           </div>
           <div class="field full">
@@ -416,10 +417,7 @@
         <div id="gw-nexuspag" class="gw-fields form-row" style="display:none">
           <div class="field full">
             <label>API Key</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="pNexuspagApiKey" type="password" placeholder="nxp_live_..." style="flex:1">
-              <button type="button" onclick="toggleKeyVisibility('pNexuspagApiKey', this)" style="padding:8px 12px;background:var(--card2,#2a2a2a);border:1px solid var(--border,#333);border-radius:8px;color:var(--text,#fff);cursor:pointer;font-size:12px;white-space:nowrap">👁 Revelar</button>
-            </div>
+            <input id="pNexuspagApiKey" type="password" placeholder="nxp_live_...">
             <div class="field-hint">Painel NexusPag → Integrações → Credenciais API → copie a chave completa</div>
           </div>
           <div class="field full">
@@ -488,6 +486,15 @@
           <div class="field">
             <label>Client Secret</label>
             <input id="pPrimepagClientSecret" type="password" placeholder="Client Secret">
+          </div>
+        </div>
+
+        <!-- Campos: WiinPay -->
+        <div id="gw-wiinpay" class="gw-fields form-row" style="display:none">
+          <div class="field full">
+            <label>API Key</label>
+            <input id="pWiinpayApiKey" type="password" placeholder="Sua API Key WiinPay">
+            <div class="field-hint">Painel WiinPay → Configurações → API Key</div>
           </div>
         </div>
 
@@ -705,9 +712,12 @@ async function doLogout() {
 
 async function onLoginSuccess(session) {
   _session = session;
-  // Carrega site_url da config para exibir no badge
-  const { data } = await sb.from('site_config').select('value').eq('key','gateway_config').maybeSingle();
-  const siteUrl = data?.value?.site_url || SUPABASE_URL;
+  // Carrega site_url via worker (que sabe o MODEL_ID do env)
+  let siteUrl = SUPABASE_URL;
+  try {
+    const r = await fetch('/api/admin-profile');
+    if (r.ok) { const d = await r.json(); siteUrl = d.site_url || SUPABASE_URL; }
+  } catch {}
   document.getElementById('siteLabel').textContent = siteUrl.replace('https://','');
   document.getElementById('previewUrl').textContent = siteUrl.replace('https://','') + '?token=abc123...';
   document.getElementById('loginScreen').style.display = 'none';
@@ -719,8 +729,13 @@ async function onLoginSuccess(session) {
 // Verifica sessão existente ao abrir o painel
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) onLoginSuccess(session);
+  if (session) { _session = session; onLoginSuccess(session); }
 })();
+
+// Mantém _session atualizado quando o Supabase renova o token automaticamente
+sb.auth.onAuthStateChange((_event, session) => {
+  if (session) _session = session;
+});
 
 document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
@@ -750,13 +765,11 @@ function switchTab(name) {
 // ── PROFILE ──
 async function loadProfile() {
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const headers = { 'Content-Type': 'application/json' };
-    if (session) headers['Authorization'] = 'Bearer ' + session.access_token;
-    const res = await fetch('/api/admin-profile', { headers });
-    if (!res.ok) return;
-    const cfg = await res.json();
-    applyProfile(cfg);
+    // Carrega perfil via worker — ele usa env.MODEL_ID, não depende do campo no form
+    const r = await fetch('/api/admin-profile');
+    if (!r.ok) return;
+    const merged = await r.json();
+    applyProfile(merged);
   } catch(e) { /* ignora */ }
 }
 
@@ -814,6 +827,8 @@ function applyProfile(cfg) {
   // PrimePag
   setVal('pPrimepagClientId',     cfg.primepag_client_id     || '');
   setVal('pPrimepagClientSecret', cfg.primepag_client_secret || '');
+  // WiinPay
+  setVal('pWiinpayApiKey', cfg.wiinpay_api_key || '');
   // Popula cache diretamente da config (independe de display:none nos blocos)
   _gwCache['pSyncpayClientId']     = cfg.syncpay_client_id     || '';
   _gwCache['pSyncpayClientSecret'] = cfg.syncpay_client_secret || '';
@@ -828,6 +843,7 @@ function applyProfile(cfg) {
   _gwCache['pEfibankSandbox']      = cfg.efibank_sandbox       ? '1' : '';
   _gwCache['pPrimepagClientId']     = cfg.primepag_client_id     || '';
   _gwCache['pPrimepagClientSecret'] = cfg.primepag_client_secret || '';
+  _gwCache['pWiinpayApiKey'] = cfg.wiinpay_api_key || '';
   // Agora aplica o gateway selecionado (esconde/mostra bloco correto)
   onGatewayChange();
   // Webhook URL
@@ -935,19 +951,26 @@ async function saveProfile() {
     efibank_sandbox:       getVal('pEfibankSandbox') === '1',
     primepag_client_id:    getVal('pPrimepagClientId'),
     primepag_client_secret:getVal('pPrimepagClientSecret'),
+    wiinpay_api_key:       getVal('pWiinpayApiKey'),
   };
-  // Envia tudo via /api/admin-profile (salva separado por model_id)
+  // Envia tudo junto para o worker — ele separa perfil/gateway e usa env.MODEL_ID
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { showToast('Sessão expirada, faça login novamente', 'err'); return; }
+    // Sempre busca o token fresco — _session pode estar desatualizado após refresh
+    const { data: { session: freshSession } } = await sb.auth.getSession();
+    const accessToken = freshSession?.access_token || _session?.access_token;
+    if (!accessToken) {
+      showToast('Sessão expirada. Faça login novamente.', 'err');
+      doLogout();
+      return;
+    }
     const res = await fetch('/api/admin-profile', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
       body: JSON.stringify({ ...payload, ...gwPayload }),
     });
     const result = await res.json();
-    if (!res.ok) {
-      showToast('Erro ao salvar: ' + JSON.stringify(result.error), 'err');
+    if (!res.ok || result.error) {
+      showToast('Erro ao salvar: ' + (result.error?.message || JSON.stringify(result.error)), 'err');
     } else {
       CURRENT_MODEL_ID = null;
       showToast('Perfil salvo com sucesso! ✓', 'ok');
@@ -983,8 +1006,11 @@ var CURRENT_MODEL_ID = null;
 async function getModelId() {
   if (CURRENT_MODEL_ID) return CURRENT_MODEL_ID;
   try {
-    const { data } = await sb.from('site_config').select('value').eq('key', 'profile').maybeSingle();
-    CURRENT_MODEL_ID = data?.value?.model_id || null;
+    // model_id vem do servidor (env.MODEL_ID do deploy)
+    try {
+      const r = await fetch('/api/admin-profile');
+      if (r.ok) { const d = await r.json(); CURRENT_MODEL_ID = d._model_id || null; }
+    } catch {}
   } catch(e) {}
   return CURRENT_MODEL_ID;
 }
@@ -1373,11 +1399,8 @@ async function gerarToken() {
     });
     const data = await res.json();
     if (data.ok) {
-      // Monta URL usando o site_url salvo localmente, ignorando o retorno da Edge Function
-      var localSiteUrl = (getVal('pSiteUrl') || '').replace(/\/+$/, '');
-      var baseUrl = localSiteUrl.startsWith('http') ? localSiteUrl : 'https://' + localSiteUrl;
-      lastTokenUrl = baseUrl + '/members.html?token=' + data.token;
-      document.getElementById('tokenUrlDisplay').textContent = lastTokenUrl;
+      lastTokenUrl = data.accessUrl;
+      document.getElementById('tokenUrlDisplay').textContent = data.accessUrl;
       document.getElementById('tokenResultCard').style.display = '';
       showToast('Link gerado! ✓', 'ok');
     } else {
@@ -1432,18 +1455,6 @@ function _restoreGwFromCache(gwEl) {
       else input.value = _gwCache[input.id];
     }
   });
-}
-
-function toggleKeyVisibility(fieldId, btn) {
-  var input = document.getElementById(fieldId);
-  if (!input) return;
-  if (input.type === 'password') {
-    input.type = 'text';
-    btn.textContent = '🙈 Ocultar';
-  } else {
-    input.type = 'password';
-    btn.textContent = '👁 Revelar';
-  }
 }
 
 function onGatewayChange() {

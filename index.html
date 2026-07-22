@@ -3,27 +3,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Privacy</title>
 <link rel="icon" href="images/faviconV2.png" type="image/png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" href="assets/fonts/Poppins-Regular.woff2" as="font" type="font/woff2" crossorigin="">
 <style>
 /* ===== FONTS (local - Poppins) ===== */
 @font-face{
-  font-family:"Poppins";
+  font-family:"PoppinsLocal";
   src:url("fonts/Poppins-Regular.woff2") format("woff2");
   font-weight:400;
   font-style:normal;
   font-display:swap;
 }
 @font-face{
-  font-family:"Poppins";
+  font-family:"PoppinsLocal";
   src:url("fonts/Poppins-Medium.woff2") format("woff2");
   font-weight:500;
   font-style:normal;
   font-display:swap;
 }
 @font-face{
-  font-family:"Poppins";
+  font-family:"PoppinsLocal";
   src:url("fonts/Poppins-SemiBold.woff2") format("woff2");
   font-weight:600;
   font-style:normal;
@@ -74,7 +72,7 @@ body{
   padding:0px;
   background:var(--bg);
   color:var(--text);
-  font:16px/1.6 "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font:16px/1.6 "PoppinsLocal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 a{color:inherit;text-decoration:none}
 img,video{display:block;max-width:100%}
@@ -195,7 +193,7 @@ main.wrap{
   overflow:hidden;
 
   color:var(--num-color);
-  font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
   font-size:var(--num-size);
   line-height:var(--num-line);
 }
@@ -277,7 +275,7 @@ main.wrap{
 }
 .profile-card.expanded .bio-text{-webkit-line-clamp:unset}
 .toggle-bio{
-  font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
   font-size:14px;
   font-weight:500;
   line-height:16px;
@@ -693,7 +691,7 @@ main.wrap{
 .sub-btn .left,
 .sub-btn .price,
 .sub-note{
-  font-family:"Poppins", system-ui, sans-serif !important;
+  font-family:"PoppinsLocal", system-ui, sans-serif !important;
   font-weight:500 !important;
 }
 
@@ -740,7 +738,7 @@ main.wrap{
   user-select:none;
   transition:all .25s ease;
 
-  font-family:"Poppins", system-ui;
+  font-family:"PoppinsLocal", system-ui;
   font-size:16px;
   color:#000;
 }
@@ -904,7 +902,7 @@ main.wrap{ padding-top:7px !important; }
 
 /* SELECT COM FONTE CERTA */
 #cultureSelectHeader{
-  font-family:"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   font-size:16px;
   font-weight:400;
   position:absolute;
@@ -917,7 +915,7 @@ main.wrap{ padding-top:7px !important; }
 }
 /* Texto do dropdown igual Privacy */
 #cultureSelectHeader{
-  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
+  font-family: "PoppinsLocal", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
   font-size: 14px;
   color: rgb(102,102,102);
 }
@@ -1004,7 +1002,7 @@ main.wrap{ padding-top:7px !important; }
   border:0;
   text-align:left;
 
-  font-family:"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   font-size:14px;
   font-weight:400;
   line-height:var(--lang-line);
@@ -1151,7 +1149,7 @@ main.wrap{ padding-top:7px !important; }
 
 /* cada item do menu */
 #sectionMedia .media-pill{
-  font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
   font-size:14px;
   font-weight:500;
   line-height:18px;
@@ -1596,7 +1594,7 @@ main.wrap{
 }
 
 .pm-name{
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:14px;
   line-height:18px;
   font-weight:600;
@@ -1609,7 +1607,7 @@ main.wrap{
 
 .pm-handle{
   margin-top:2px;
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:13px;
   line-height:16px;
   font-weight:400;
@@ -1630,7 +1628,7 @@ main.wrap{
 .pm-h3{
   margin: 8px 0 8px;
   padding-left: 15px;            /* pra bater ~31px total (16 + 15) */
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:16px;
   line-height:21.6px;
   font-weight:600;               /* SemiBold */
@@ -1648,7 +1646,7 @@ main.wrap{
   align-items:center;
   gap:9px;                       /* seu 9px ícone -> texto */
   padding-left: 15px;            /* pra bater ~31px total */
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:16px;
   line-height:24px;
   font-weight:400;
@@ -1680,7 +1678,7 @@ main.wrap{
 /* seção pagamentos */
 .pm-title{
   margin: 22px 0 8px;            /* seu “22px após a linha” */
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:20px;
   line-height:22px;
   font-weight:700;               /* Bold */
@@ -1689,7 +1687,7 @@ main.wrap{
 
 .pm-label{
   margin-top:15px;               /* Formas pagamento -> Valor (15px) */
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:14px;
   line-height:18.9px;
   font-weight:400;
@@ -1698,7 +1696,7 @@ main.wrap{
 
 .pm-amount{
   margin-top:15px;               /* Valor -> R$ (15px) */
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:20px;
   line-height:22px;
   font-weight:700;
@@ -1715,7 +1713,7 @@ main.wrap{
   border-radius:10px;
   background: rgb(248,250,252);
   padding: 0 12px;
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:14px;
   line-height:38px;
   color: rgb(247,250,252);
@@ -1743,7 +1741,7 @@ main.wrap{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:16px;
   line-height:24px;
   font-weight:500;
@@ -1769,7 +1767,7 @@ main.wrap{
   border-radius:30px;
   background:#111;
   color:#fff;
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:16px;
   font-weight:600;
   cursor:pointer;
@@ -1778,7 +1776,7 @@ main.wrap{
 /* opcional: status */
 .pm-status{
   margin-top:14px;
-  font-family:"Poppins", system-ui, sans-serif;
+  font-family:"PoppinsLocal", system-ui, sans-serif;
   font-size:14px;
   color: rgb(108,117,125);
 }
@@ -2033,7 +2031,7 @@ main.wrap{
   padding:0 !important;
   white-space:nowrap !important;
 
-  font-family:"Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
+  font-family:"PoppinsLocal", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
   font-size:16px !important;
   font-weight:500 !important;
   line-height:18px !important;
@@ -2156,7 +2154,7 @@ main.wrap{
 
 /* botão normal */
 .media-pill{
-  font-family:"Poppins",system-ui;
+  font-family:"PoppinsLocal",system-ui;
   font-size:14px;
   font-weight:500;
   color:#111;
@@ -2183,7 +2181,7 @@ main.wrap{
 
 /* ===== TODOS IGUAIS ===== */
 .media-pill{
-  font-family:"Poppins",system-ui;
+  font-family:"PoppinsLocal",system-ui;
   font-size:14px;
   font-weight:500;
   color:#111;
@@ -2216,13 +2214,13 @@ main.wrap{
 
 /* TITULO Larissa Vitoria dentro do post */
 .p-name{
-  font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  font-family:"PoppinsLocal", system-ui, -apple-system, Segoe UI, Roboto, Arial;
   font-weight:500 !important;
   color:rgb(30,41,59) !important;
 }
 /* USERNAME dentro do post */
 .p-handle{
-  font-family:"Poppins", system-ui, sans-serif !important;
+  font-family:"PoppinsLocal", system-ui, sans-serif !important;
   font-weight:400 !important; /* Regular */
   color:rgb(30,41,59) !important;
 }
@@ -2609,6 +2607,35 @@ main.wrap{
 
     <div class="pm-body">
 
+      <!-- ── Etapa de login/cadastro (aparece antes do pagamento) ── -->
+      <div id="authGateStep" style="display:none">
+        <h3 class="pm-h3">Crie sua conta para continuar</h3>
+        <p style="font-size:13px;color:var(--text-dim,#999);margin:4px 0 18px;line-height:1.5">
+          Assim você acessa o conteúdo assim que o pagamento for confirmado — e pode voltar aqui depois só fazendo login.
+        </p>
+
+        <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;margin-bottom:16px">
+          <button type="button" id="authTabRegister" onclick="pixAuthSwitchTab('register')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#111">Criar conta</button>
+          <button type="button" id="authTabLogin" onclick="pixAuthSwitchTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim,#999)">Já tenho conta</button>
+        </div>
+
+        <div id="authFormRegister">
+          <input type="email" id="pixAuthRegEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+          <input type="password" id="pixAuthRegPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+        </div>
+
+        <div id="authFormLogin" style="display:none">
+          <input type="email" id="pixAuthLoginEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+          <input type="password" id="pixAuthLoginPass" placeholder="Senha" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+        </div>
+
+        <button id="pixAuthSubmitBtn" onclick="pixAuthSubmit()" type="button" style="display:block;width:100%;padding:13px;background:var(--accent,#e91e8c);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Criar conta e continuar</button>
+        <p id="pixAuthMsg" style="text-align:center;font-size:12px;margin-top:10px;min-height:16px"></p>
+      </div>
+
+      <!-- ── Etapa de pagamento (aparece após login/cadastro) ── -->
+      <div id="paymentStep">
+
       <h3 class="pm-h3" id="payTitle">Benefícios exclusivos</h3>
 
       <ul class="pm-benefits">
@@ -2635,6 +2662,7 @@ main.wrap{
 
       <button id="generatePixBtn" class="pm-generate" type="button">Gerar Pix</button>
 
+      </div>
     </div>
   </div>
 </div>
@@ -2643,7 +2671,7 @@ main.wrap{
 <script>
 
 </script>
-<!-- app.obf.js removido -->
+<script src="js/app.obf.js"></script>
 <script src="js/lang.obf.js"></script>
 <script src="js/promos.obf.js"></script>
 <script src="js/tabs.obf.js"></script>

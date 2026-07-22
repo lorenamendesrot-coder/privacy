@@ -1,5 +1,7 @@
 // functions/api/activate-access.js
-// Confirma o e-mail do usuário recém-cadastrado e vincula o token de pagamento
+// Vincula o token de pagamento (recebido por URL) ao usuário recém-cadastrado.
+// Usado no fluxo antigo: pagou como anônimo → recebeu link com ?token=xxx →
+// criou conta depois → aqui a gente casa o token com o user_id.
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -17,50 +19,32 @@ export async function onRequest({ request, env }) {
   }
 
   const { token, user_id, email } = body;
-  if (!user_id) {
-    return new Response(JSON.stringify({ error: "user_id é obrigatório" }), { status: 422, headers: CORS });
+  if (!token || !user_id) {
+    return new Response(JSON.stringify({ error: "token e user_id são obrigatórios" }), { status: 422, headers: CORS });
   }
 
-  const SUPABASE_URL          = env.SUPABASE_URL;
-  const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_KEY;
+  const SUPABASE_URL   = env.SUPABASE_URL;
+  const SERVICE_KEY    = env.SUPABASE_SERVICE_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
     return new Response(JSON.stringify({ error: "Variáveis de ambiente não configuradas" }), { status: 500, headers: CORS });
   }
 
-  const adminHeaders = {
-    "Content-Type": "application/json",
-    "apikey": SUPABASE_SERVICE_KEY,
-    "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`,
-  };
-
   try {
-    // 1) Confirma o e-mail do usuário automaticamente (sem isso o login falha)
-    const confirmRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
-      method: "PUT",
-      headers: adminHeaders,
-      body: JSON.stringify({ email_confirm: true }),
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/access_tokens?token=eq.${encodeURIComponent(token)}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SERVICE_KEY,
+        "Authorization": `Bearer ${SERVICE_KEY}`,
+        "Prefer": "return=representation",
+      },
+      body: JSON.stringify({ user_id, ...(email ? { payer_email: email } : {}) }),
     });
-    if (!confirmRes.ok) {
-      const errData = await confirmRes.json().catch(() => ({}));
-      console.error("[activate-access] falha ao confirmar e-mail:", errData);
-    }
 
-    // 2) Vincula o token de pagamento ao usuário (best-effort, não bloqueia o cadastro)
-    if (token) {
-      const tokenRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/access_tokens?token=eq.${encodeURIComponent(token)}`,
-        {
-          method: "PATCH",
-          headers: { ...adminHeaders, "Prefer": "return=minimal" },
-          body: JSON.stringify({ used_at: new Date().toISOString(), user_id, payer_email: email || null }),
-        }
-      ).catch(() => null);
-      if (tokenRes && !tokenRes.ok) {
-        const errData = await tokenRes.json().catch(() => ({}));
-        console.error("[activate-access] falha ao vincular token:", errData);
-      }
-    }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && data.message) || "Erro ao vincular acesso");
+    if (!Array.isArray(data) || !data.length) throw new Error("Token de acesso não encontrado");
 
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS });
   } catch (err) {
@@ -68,3 +52,4 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
   }
 }
+
