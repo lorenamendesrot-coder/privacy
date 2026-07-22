@@ -43,6 +43,8 @@ export async function onRequest({ request, env }) {
 
   try {
     const webhookUrl = site_url ? `${site_url}/api/pix-webhook` : null;
+    console.log(`[pix-cashin] gateway=${gatewayName} amount=${amount} hasWebhook=${!!webhookUrl}`);
+    console.log(`[pix-cashin] cfg keys=`, Object.keys(cfg).join(','));
     const result = await gateway.cashin(cfg, amount, webhookUrl);
 
     // Se o lead estiver logado, guarda a ligação user_id <-> cobrança.
@@ -59,7 +61,8 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
   } catch (err) {
     console.error(`[pix-cashin:${gatewayName}]`, err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
+    const msg = (err && err.message) ? err.message : JSON.stringify(err);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: CORS });
   }
 }
 

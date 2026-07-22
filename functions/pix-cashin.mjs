@@ -29,7 +29,7 @@ const GATEWAYS = {
   nexuspag: {
     requiredFields: ["nexuspag_api_key"],
     async cashin(cfg, amount, webhookUrl) {
-      const amountReais = parseFloat((parseFloat(amount) / 100).toFixed(2));
+      const amountReais = parseFloat(parseFloat(amount).toFixed(2));
       const payload = { amount: amountReais, description: "Acesso ao conteúdo" };
       if (webhookUrl) payload.webhook_url = webhookUrl;
       const res = await fetch("https://nexuspag.com/api/pix/create", {
@@ -82,7 +82,7 @@ const GATEWAYS = {
   wiinpay: {
     requiredFields: ["wiinpay_api_key"],
     async cashin(cfg, amount, webhookUrl) {
-      const value = parseFloat((parseFloat(amount) / 100).toFixed(2));
+      const value = parseFloat(parseFloat(amount).toFixed(2));
       const payload = {
         api_key: cfg.wiinpay_api_key,
         value,
