@@ -83,7 +83,7 @@ const GATEWAYS = {
   wiinpay: {
     requiredFields: ["wiinpay_api_key"],
     async cashin(cfg, amount, webhookUrl) {
-      const value = parseFloat((parseFloat(amount) / 100).toFixed(2));
+      const value = parseFloat(parseFloat(amount).toFixed(2));
       const payload = {
         api_key: cfg.wiinpay_api_key,
         value,
