@@ -66,9 +66,8 @@
 
     var session = getSession();
     if (!session) {
-      // Sem login: mostra a etapa de cadastro/login e só gera o PIX depois
-      _pendingPlan = { planCode: planCode, priceStr: priceStr };
-      showAuthGate();
+      // Auth agora é feito inline na página — fecha o modal se abrir sem sessão
+      fecharModal();
       return;
     }
 
