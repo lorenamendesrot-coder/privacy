@@ -6,8 +6,6 @@ import { onRequest as pixCashin }      from "./functions/api/pix-cashin.js";
 import { onRequest as pixWebhook }     from "./functions/api/pix-webhook.js";
 import { onRequest as syncpayCashin }  from "./functions/api/syncpay-cashin.js";
 import { onRequest as activateAccess } from "./functions/api/activate-access.js";
-import { onRequest as checkPayment }   from "./functions/api/check-payment.js";
-import { onRequest as memberContent }  from "./functions/api/member-content.js";
 
 const ROUTES = {
   "/api/admin-media":       adminMedia,
@@ -18,8 +16,6 @@ const ROUTES = {
   "/api/pix-webhook":       pixWebhook,
   "/api/syncpay-cashin":    syncpayCashin,
   "/api/activate-access":   activateAccess,
-  "/api/check-payment":     checkPayment,
-  "/api/member-content":    memberContent,
 };
 
 export default {

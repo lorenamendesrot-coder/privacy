@@ -31,17 +31,6 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ ok: true, token: existing.token, duplicate: true }), { status: 200 });
   }
 
-  // Se o lead pagou já logado, existe um pending_payments com o user_id dele
-  let userId = null;
-  let pendingId = null;
-  const { data: pending } = await supabase
-    .from("pending_payments").select("user_id, identifier")
-    .eq("identifier", parsed.paymentId).maybeSingle();
-  if (pending) {
-    userId = pending.user_id;
-    pendingId = pending.identifier;
-  }
-
   // Gera token seguro via Web Crypto API
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
@@ -57,7 +46,6 @@ export async function onRequest({ request, env }) {
     payer_name:  parsed.payerName  || null,
     amount:      parsed.amount     || null,
     expires_at:  expiresAt.toISOString(),
-    user_id:     userId,
   });
 
   if (error) {
@@ -65,14 +53,9 @@ export async function onRequest({ request, env }) {
     return new Response("DB error", { status: 500 });
   }
 
-  // Limpa o pending_payments, já foi consumido
-  if (pendingId) {
-    await supabase.from("pending_payments").delete().eq("identifier", pendingId);
-  }
-
   const siteUrl  = env.SITE_URL || "";
   const accessUrl = `${siteUrl}?token=${token}`;
-  console.log(`✅ Acesso liberado | gateway: ${gateway} | payment: ${parsed.paymentId} | user_id: ${userId || "—"} | url: ${accessUrl}`);
+  console.log(`✅ Acesso liberado | gateway: ${gateway} | payment: ${parsed.paymentId} | url: ${accessUrl}`);
 
   return new Response(JSON.stringify({ ok: true, token, accessUrl }), { status: 200 });
 }
