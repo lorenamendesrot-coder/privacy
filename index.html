@@ -1509,12 +1509,17 @@ main.wrap{
 .pay-card.privacy-modal{
   width: min(387px, calc(100vw - 32px)) !important;
   max-height: 88vh !important;
-  background: #250, 247, 242 !important;
+  background: rgb(250, 247, 242) !important;
   border-radius: 18px !important;
   overflow: hidden !important;
   display:flex !important;
   flex-direction:column !important;
   box-shadow:none !important;
+}
+
+#authGateStep input:focus {
+  border-color: var(--accent,#e91e8c) !important;
+  outline: none !important;
 }
 
 /* header/band */
@@ -2609,6 +2614,61 @@ main.wrap{
 
     <div class="pm-body">
 
+      <!-- ── Etapa 1: Cadastro / Login ── -->
+      <div id="authGateStep" style="display:none">
+        <h2 style="font-size:18px;font-weight:700;margin:0 0 6px;color:var(--text,#111)">Acesse sua conta</h2>
+        <p style="font-size:13px;color:#888;margin:0 0 20px;line-height:1.5">Crie sua conta para liberar o acesso após o pagamento.</p>
+
+        <!-- Formulário de cadastro -->
+        <div id="agFormRegister">
+          <input type="email" id="agRegEmail" placeholder="Email/CPF" autocomplete="email"
+            style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;font-size:15px;color:#111;background:#fff;margin-bottom:12px;outline:none">
+          <div style="position:relative;margin-bottom:6px">
+            <input type="password" id="agRegPass" placeholder="Senha" autocomplete="new-password"
+              style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 48px 14px 16px;font-size:15px;color:#111;background:#fff;outline:none">
+            <button type="button" onclick="agTogglePass('agRegPass',this)" tabindex="-1"
+              style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;line-height:1">👁</button>
+          </div>
+          <div style="position:relative;margin-bottom:16px">
+            <input type="password" id="agRegPassConfirm" placeholder="Confirmar senha" autocomplete="new-password"
+              style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 48px 14px 16px;font-size:15px;color:#111;background:#fff;outline:none">
+            <button type="button" onclick="agTogglePass('agRegPassConfirm',this)" tabindex="-1"
+              style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;line-height:1">👁</button>
+          </div>
+          <button type="button" id="agRegBtn" onclick="agSubmitRegister()"
+            style="width:100%;padding:15px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;transition:background .2s">Continuar</button>
+          <p style="text-align:center;font-size:14px;color:#888;margin:0">
+            Já tem uma conta?
+            <a href="#" onclick="agSwitchToLogin();return false" style="color:var(--accent,#e91e8c);font-weight:600;text-decoration:none"> Cadastre-se</a>
+          </p>
+        </div>
+
+        <!-- Formulário de login (oculto por padrão) -->
+        <div id="agFormLogin" style="display:none">
+          <input type="email" id="agLoginEmail" placeholder="Email/CPF" autocomplete="email"
+            style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 16px;font-size:15px;color:#111;background:#fff;margin-bottom:12px;outline:none">
+          <div style="position:relative;margin-bottom:6px">
+            <input type="password" id="agLoginPass" placeholder="Senha" autocomplete="current-password"
+              style="width:100%;box-sizing:border-box;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 48px 14px 16px;font-size:15px;color:#111;background:#fff;outline:none">
+            <button type="button" onclick="agTogglePass('agLoginPass',this)" tabindex="-1"
+              style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;line-height:1">👁</button>
+          </div>
+          <div style="text-align:right;margin-bottom:16px">
+            <a href="#" style="font-size:13px;color:#888;text-decoration:none">Esqueci minha senha</a>
+          </div>
+          <button type="button" id="agLoginBtn" onclick="agSubmitLogin()"
+            style="width:100%;padding:15px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;transition:background .2s">Continuar</button>
+          <p style="text-align:center;font-size:14px;color:#888;margin:0">
+            Não tem uma conta?
+            <a href="#" onclick="agSwitchToRegister();return false" style="color:var(--accent,#e91e8c);font-weight:600;text-decoration:none"> Cadastre-se</a>
+          </p>
+        </div>
+
+        <p id="agMsg" style="text-align:center;font-size:13px;margin-top:12px;min-height:16px;color:#e05252"></p>
+      </div>
+
+      <!-- ── Etapa 2: Pagamento PIX ── -->
+      <div id="paymentStep">
       <h3 class="pm-h3" id="payTitle">Benefícios exclusivos</h3>
 
       <ul class="pm-benefits">
@@ -2635,6 +2695,7 @@ main.wrap{
 
       <button id="generatePixBtn" class="pm-generate" type="button">Gerar Pix</button>
 
+      </div><!-- /paymentStep -->
     </div>
   </div>
 </div>
@@ -2659,6 +2720,159 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 </script>
 <script src="content-unlock.js"></script>
 <script src="pix-modal.js"></script>
+<script>
+// ── Auth Gate no Modal ───────────────────────────────────────
+(function() {
+  var SB_URL  = 'https://ackovomkgkmjfhoidwti.supabase.co';
+  var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFja292b21rZ2ttamZob2lkd3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMDE5ODQsImV4cCI6MjA5NTU3Nzk4NH0.ofFVhY0Q7xHiekYZUiPHiDANbR8Q8W4W4RP-y9DTg0g';
+  var _pendingPlan = null;
+
+  function getSession() {
+    try { var s = JSON.parse(localStorage.getItem('mbr_session') || '{}'); return (s.access_token || (s.session && s.session.access_token)) ? s : null; } catch(e) { return null; }
+  }
+
+  function setMsg(text, isErr) {
+    var el = document.getElementById('agMsg');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isErr ? '#e05252' : '#22c55e';
+  }
+
+  function setBtnActive(btnId, active) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.style.background = active ? 'var(--accent,#e91e8c)' : '#ccc';
+  }
+
+  function validateRegInputs() {
+    var email = (document.getElementById('agRegEmail') || {}).value || '';
+    var pass  = (document.getElementById('agRegPass')  || {}).value || '';
+    setBtnActive('agRegBtn', email.includes('@') && pass.length >= 6);
+  }
+
+  function validateLoginInputs() {
+    var email = (document.getElementById('agLoginEmail') || {}).value || '';
+    var pass  = (document.getElementById('agLoginPass')  || {}).value || '';
+    setBtnActive('agLoginBtn', email.includes('@') && pass.length >= 1);
+  }
+
+  // Ativa inputs
+  document.addEventListener('DOMContentLoaded', function() {
+    ['agRegEmail','agRegPass','agRegPassConfirm'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', validateRegInputs);
+    });
+    ['agLoginEmail','agLoginPass'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', validateLoginInputs);
+    });
+  });
+
+  window.agTogglePass = function(inputId, btn) {
+    var el = document.getElementById(inputId);
+    if (!el) return;
+    var show = el.type === 'password';
+    el.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
+  };
+
+  window.agSwitchToLogin = function() {
+    document.getElementById('agFormRegister').style.display = 'none';
+    document.getElementById('agFormLogin').style.display = '';
+    setMsg('');
+  };
+
+  window.agSwitchToRegister = function() {
+    document.getElementById('agFormLogin').style.display = 'none';
+    document.getElementById('agFormRegister').style.display = '';
+    setMsg('');
+  };
+
+  window.agSubmitRegister = function() {
+    var email   = (document.getElementById('agRegEmail')        || {}).value || '';
+    var pass    = (document.getElementById('agRegPass')         || {}).value || '';
+    var confirm = (document.getElementById('agRegPassConfirm')  || {}).value || '';
+    email = email.trim();
+    if (!email || !pass) { setMsg('Preencha e-mail e senha.', true); return; }
+    if (pass.length < 6) { setMsg('A senha precisa ter pelo menos 6 caracteres.', true); return; }
+    if (pass !== confirm) { setMsg('As senhas não coincidem.', true); return; }
+
+    var btn = document.getElementById('agRegBtn');
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    fetch(SB_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+      body: JSON.stringify({ email: email, password: pass }),
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Erro ao criar conta.');
+      if (!res.data.access_token) {
+        setMsg('Verifique seu e-mail para confirmar o cadastro.', false);
+        btn.disabled = false; btn.textContent = 'Continuar';
+        return;
+      }
+      localStorage.setItem('mbr_session', JSON.stringify(res.data));
+      agOnSuccess();
+    })
+    .catch(function(e) { setMsg(e.message, true); btn.disabled = false; btn.textContent = 'Continuar'; });
+  };
+
+  window.agSubmitLogin = function() {
+    var email = (document.getElementById('agLoginEmail') || {}).value || '';
+    var pass  = (document.getElementById('agLoginPass')  || {}).value || '';
+    email = email.trim();
+    if (!email || !pass) { setMsg('Preencha e-mail e senha.', true); return; }
+
+    var btn = document.getElementById('agLoginBtn');
+    btn.disabled = true; btn.textContent = 'Entrando...';
+
+    fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+      body: JSON.stringify({ email: email, password: pass }),
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(res) {
+      if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Credenciais inválidas.');
+      localStorage.setItem('mbr_session', JSON.stringify(res.data));
+      agOnSuccess();
+    })
+    .catch(function(e) { setMsg(e.message, true); btn.disabled = false; btn.textContent = 'Continuar'; });
+  };
+
+  function agOnSuccess() {
+    document.getElementById('authGateStep').style.display = 'none';
+    document.getElementById('paymentStep').style.display = '';
+    if (_pendingPlan) {
+      var p = _pendingPlan; _pendingPlan = null;
+      setTimeout(function() { _origOpen(p.planCode, p.priceStr); }, 100);
+    }
+  }
+
+  // Intercepta openPayModal
+  var _origOpen = window.openPayModal;
+  window.openPayModal = function(planCode, priceStr) {
+    if (getSession()) {
+      // Já logado — vai direto pro pagamento
+      if (typeof _origOpen === 'function') _origOpen(planCode, priceStr);
+      return;
+    }
+    // Não logado — abre modal no auth gate
+    _pendingPlan = { planCode: planCode, priceStr: priceStr };
+    // Abre o modal manualmente (sem chamar _origOpen que geraria PIX)
+    var overlay = document.getElementById('payModal');
+    if (overlay) { overlay.style.display = 'flex'; overlay.setAttribute('aria-hidden','false'); }
+    document.getElementById('authGateStep').style.display = '';
+    document.getElementById('paymentStep').style.display = 'none';
+    // Popula header do modal com o plano
+    var priceEl = document.getElementById('payPriceSummary');
+    if (priceEl) priceEl.textContent = priceStr || '';
+  };
+
+})();
+</script>
 
 <script>
 
