@@ -46,7 +46,7 @@ export async function onRequest({ request, env }) {
   let expirationDays = 1; // padrão: 1 dia
   const { data: pending } = await supabase
     .from("pending_payments")
-    .select("plan_code")
+    .select("plan_code, buyer_email")
     .eq("payment_id", parsed.paymentId)
     .maybeSingle();
 
@@ -57,10 +57,16 @@ export async function onRequest({ request, env }) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expirationDays);
 
+  // Prioriza o e-mail da conta logada (buyer_email) sobre o e-mail do pagador
+  // vindo do gateway (que costuma ser o dono da conta bancária, e não bate
+  // com o e-mail de cadastro do site). Isso garante que a checagem de
+  // "acesso ativo" após login funcione corretamente.
+  const linkedEmail = (pending && pending.buyer_email) || parsed.payerEmail || null;
+
   const { error } = await supabase.from("access_tokens").insert({
     token,
     payment_id:  parsed.paymentId,
-    payer_email: parsed.payerEmail || null,
+    payer_email: linkedEmail,
     payer_name:  parsed.payerName  || null,
     amount:      parsed.amount     || null,
     expires_at:  expiresAt.toISOString(),

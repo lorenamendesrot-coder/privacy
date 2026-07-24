@@ -19,7 +19,7 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400, headers: CORS });
   }
 
-  const { amount, plan_code, site_url, gateway: gatewayName = "syncpay", ...cfg } = body;
+  const { amount, plan_code, buyer_email, site_url, gateway: gatewayName = "syncpay", ...cfg } = body;
 
   if (!amount) {
     return new Response(JSON.stringify({ error: "amount obrigatório" }), { status: 422, headers: CORS });
@@ -52,6 +52,7 @@ export async function onRequest({ request, env }) {
         await supabase.from("pending_payments").upsert({
           payment_id: result.identifier,
           plan_code: plan_code,
+          buyer_email: buyer_email || null,
           amount: parseFloat(amount),
           created_at: new Date().toISOString(),
         }, { onConflict: "payment_id" });

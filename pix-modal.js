@@ -85,6 +85,13 @@
     loadGwConfig().then(function (cfg) {
       var gw = cfg.gateway || 'syncpay';
 
+      // Pega o e-mail da conta logada (não o do pagador) para vincular o acesso com segurança
+      var buyerEmail = '';
+      try {
+        var sess = JSON.parse(localStorage.getItem('mbr_session') || '{}');
+        buyerEmail = (sess.user && sess.user.email) || '';
+      } catch (e) {}
+
       // Valida campos obrigatórios por gateway
       var missing = false;
       if (gw === 'syncpay'  && (!cfg.syncpay_client_id || !cfg.syncpay_client_secret)) missing = true;
@@ -103,7 +110,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign(
-          { amount: _selectedPrice, plan_code: _selectedPlanCode, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
+          { amount: _selectedPrice, plan_code: _selectedPlanCode, buyer_email: buyerEmail, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
           cfg // passa todas as credenciais da config (client_id, api_key, etc.)
         )),
       })
