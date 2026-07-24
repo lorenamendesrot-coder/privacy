@@ -70,44 +70,6 @@ async function cashinAsaas(cfg: any, amount: number) {
   return { pix_code: qrData.payload, identifier: data.id };
 }
 
-async function cashinWiinpay(cfg: any, amount: number, webhookUrl: string | null) {
-  const urls = [
-    "https://api-v2.wiinpay.com.br/payment/create",
-    "https://api.wiinpay.com.br/payment/create",
-  ];
-
-  const payload: any = {
-    api_key: cfg.wiinpay_api_key,
-    value: parseFloat(amount.toFixed(2)),
-    name: "Cliente",
-    email: "cliente@email.com",
-    description: "Acesso ao conteúdo",
-  };
-  if (webhookUrl) payload.webhook_url = webhookUrl;
-
-  let lastErr = "";
-  for (const url of urls) {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const rawText = await res.text();
-    let data: any = {};
-    try { data = JSON.parse(rawText); } catch { data = { _raw: rawText }; }
-
-    if (res.ok) {
-      return {
-        pix_code: data.pix_code || data.brcode || data.copy_paste || data.qr_code || data.pixCopiaECola,
-        qr_code_base64: data.qr_code_base64 || data.qrCodeImage || null,
-        identifier: data.id || data.paymentId || data.payment_id || data.transactionId,
-      };
-    }
-    lastErr = `WiinPay [${url}] HTTP ${res.status}: ${rawText.slice(0, 300)}`;
-  }
-  throw new Error(lastErr);
-}
-
 // ── Main ────────────────────────────────────────────────────────
 
 serve(async (req) => {
@@ -143,10 +105,7 @@ serve(async (req) => {
     const amt = parseFloat(amount);
 
     let result;
-    if (gateway === "wiinpay") {
-      if (!cfg.wiinpay_api_key) throw new Error("API key WiinPay não configurada.");
-      result = await cashinWiinpay(cfg, amt, webhookUrl);
-    } else if (gateway === "nexuspag") {
+    if (gateway === "nexuspag") {
       if (!cfg.nexuspag_api_key) throw new Error("API key NexusPag não configurada.");
       result = await cashinNexuspag(cfg, amt, webhookUrl);
     } else if (gateway === "asaas") {

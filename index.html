@@ -2442,42 +2442,6 @@ main.wrap{
 
 </div>
 <div class="plans">
-  <!-- ── Cadastro/Login inline (aparece quando não logado) ── -->
-  <div id="inlineAuthGate" style="display:none;background:var(--surface,#111);border:1px solid var(--border,#222);border-radius:16px;padding:24px;margin-bottom:20px">
-    <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:var(--text,#fff)">Crie sua conta para assinar</h3>
-    <p style="font-size:13px;color:var(--text-dim,#999);margin:0 0 18px;line-height:1.5">Assim você acessa o conteúdo assim que o pagamento for confirmado — e pode voltar aqui depois só fazendo login.</p>
-
-    <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;margin-bottom:16px">
-      <button type="button" id="inlineTabRegister" onclick="inlineAuthSwitchTab('register')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#111">Criar conta</button>
-      <button type="button" id="inlineTabLogin" onclick="inlineAuthSwitchTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim,#999)">Já tenho conta</button>
-    </div>
-
-    <!-- Formulário de cadastro -->
-    <div id="inlineFormRegister">
-      <input type="email" id="inlineRegEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:var(--surface2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:12px;color:var(--text,#fff);font-size:14px;margin-bottom:10px;outline:none">
-      <div style="position:relative;margin-bottom:10px">
-        <input type="password" id="inlineRegPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password" style="width:100%;box-sizing:border-box;background:var(--surface2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:12px 44px 12px 12px;color:var(--text,#fff);font-size:14px;outline:none">
-        <button type="button" onclick="inlineTogglePass('inlineRegPass',this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim,#999);font-size:16px;padding:4px">👁</button>
-      </div>
-      <div style="position:relative;margin-bottom:10px">
-        <input type="password" id="inlineRegPassConfirm" placeholder="Confirmar senha" autocomplete="new-password" style="width:100%;box-sizing:border-box;background:var(--surface2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:12px 44px 12px 12px;color:var(--text,#fff);font-size:14px;outline:none">
-        <button type="button" onclick="inlineTogglePass('inlineRegPassConfirm',this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim,#999);font-size:16px;padding:4px">👁</button>
-      </div>
-    </div>
-
-    <!-- Formulário de login -->
-    <div id="inlineFormLogin" style="display:none">
-      <input type="email" id="inlineLoginEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:var(--surface2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:12px;color:var(--text,#fff);font-size:14px;margin-bottom:10px;outline:none">
-      <div style="position:relative;margin-bottom:10px">
-        <input type="password" id="inlineLoginPass" placeholder="Senha" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:var(--surface2,#1a1a1a);border:1px solid var(--border,#333);border-radius:8px;padding:12px 44px 12px 12px;color:var(--text,#fff);font-size:14px;outline:none">
-        <button type="button" onclick="inlineTogglePass('inlineLoginPass',this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim,#999);font-size:16px;padding:4px">👁</button>
-      </div>
-    </div>
-
-    <button id="inlineAuthSubmitBtn" onclick="inlineAuthSubmit()" type="button" style="display:block;width:100%;padding:13px;background:var(--accent,#e91e8c);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">Criar conta e continuar</button>
-    <p id="inlineAuthMsg" style="text-align:center;font-size:12px;margin-top:10px;min-height:16px;color:var(--text-dim,#999)"></p>
-  </div>
-
   <h3 class="plans-title">Assinaturas</h3>
 
   <!-- 1 mês (sozinho) -->
@@ -2643,7 +2607,33 @@ main.wrap{
 
     <div class="pm-body">
 
-      <!-- ── Etapa de pagamento ── -->
+      <!-- ── Etapa de login/cadastro (aparece antes do pagamento) ── -->
+      <div id="authGateStep" style="display:none">
+        <h3 class="pm-h3">Crie sua conta para continuar</h3>
+        <p style="font-size:13px;color:var(--text-dim,#999);margin:4px 0 18px;line-height:1.5">
+          Assim você acessa o conteúdo assim que o pagamento for confirmado — e pode voltar aqui depois só fazendo login.
+        </p>
+
+        <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;margin-bottom:16px">
+          <button type="button" id="authTabRegister" onclick="pixAuthSwitchTab('register')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#111">Criar conta</button>
+          <button type="button" id="authTabLogin" onclick="pixAuthSwitchTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-dim,#999)">Já tenho conta</button>
+        </div>
+
+        <div id="authFormRegister">
+          <input type="email" id="pixAuthRegEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+          <input type="password" id="pixAuthRegPass" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+        </div>
+
+        <div id="authFormLogin" style="display:none">
+          <input type="email" id="pixAuthLoginEmail" placeholder="E-mail" autocomplete="email" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+          <input type="password" id="pixAuthLoginPass" placeholder="Senha" autocomplete="current-password" style="width:100%;box-sizing:border-box;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;color:#111;font-size:14px;margin-bottom:10px;outline:none">
+        </div>
+
+        <button id="pixAuthSubmitBtn" onclick="pixAuthSubmit()" type="button" style="display:block;width:100%;padding:13px;background:var(--accent,#e91e8c);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Criar conta e continuar</button>
+        <p id="pixAuthMsg" style="text-align:center;font-size:12px;margin-top:10px;min-height:16px"></p>
+      </div>
+
+      <!-- ── Etapa de pagamento (aparece após login/cadastro) ── -->
       <div id="paymentStep">
 
       <h3 class="pm-h3" id="payTitle">Benefícios exclusivos</h3>
@@ -2697,141 +2687,6 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 </script>
 <script src="content-unlock.js"></script>
 <script src="pix-modal.js"></script>
-
-<script>
-// ── Auth inline na página ────────────────────────────────
-function inlineTogglePass(inputId, btn) {
-  var el = document.getElementById(inputId);
-  if (!el) return;
-  var show = el.type === 'password';
-  el.type = show ? 'text' : 'password';
-  btn.textContent = show ? '🙈' : '👁';
-}
-
-function inlineAuthSwitchTab(which) {
-  var isReg = which === 'register';
-  var tReg = document.getElementById('inlineTabRegister');
-  var tLog = document.getElementById('inlineTabLogin');
-  var fReg = document.getElementById('inlineFormRegister');
-  var fLog = document.getElementById('inlineFormLogin');
-  var btn  = document.getElementById('inlineAuthSubmitBtn');
-  var msg  = document.getElementById('inlineAuthMsg');
-  if (msg) msg.textContent = '';
-  if (tReg) { tReg.style.background = isReg ? '#fff' : 'transparent'; tReg.style.color = isReg ? '#111' : 'var(--text-dim,#999)'; }
-  if (tLog) { tLog.style.background = !isReg ? '#fff' : 'transparent'; tLog.style.color = !isReg ? '#111' : 'var(--text-dim,#999)'; }
-  if (fReg) fReg.style.display = isReg ? '' : 'none';
-  if (fLog) fLog.style.display = !isReg ? '' : 'none';
-  if (btn)  { btn.textContent = isReg ? 'Criar conta e continuar' : 'Entrar e continuar'; btn.dataset.mode = isReg ? 'register' : 'login'; }
-}
-
-function inlineAuthSubmit() {
-  var btn  = document.getElementById('inlineAuthSubmitBtn');
-  var msg  = document.getElementById('inlineAuthMsg');
-  var mode = (btn && btn.dataset.mode) || 'register';
-  var SB_URL  = window.SUPABASE_URL  || '';
-  var SB_ANON = window.SUPABASE_ANON || '';
-
-  function setMsg(text, isErr) {
-    if (!msg) return;
-    msg.textContent = text;
-    msg.style.color = isErr ? '#e05252' : 'var(--accent,#e91e8c)';
-  }
-
-  if (mode === 'register') {
-    var email   = (document.getElementById('inlineRegEmail')       || {}).value || '';
-    var pass    = (document.getElementById('inlineRegPass')        || {}).value || '';
-    var confirm = (document.getElementById('inlineRegPassConfirm') || {}).value || '';
-    email = email.trim();
-    if (!email || !pass) { setMsg('Preencha e-mail e senha.', true); return; }
-    if (pass.length < 6) { setMsg('A senha precisa ter pelo menos 6 caracteres.', true); return; }
-    if (pass !== confirm) { setMsg('As senhas não coincidem.', true); return; }
-
-    btn.disabled = true; btn.textContent = 'Criando conta...';
-    fetch(SB_URL + '/auth/v1/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
-      body: JSON.stringify({ email: email, password: pass }),
-    })
-      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
-      .then(function(res) {
-        if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Erro ao criar conta.');
-        if (!res.data.access_token) {
-          setMsg('Conta criada! Verifique seu e-mail para confirmar, depois clique em "Já tenho conta".', false);
-          btn.disabled = false; btn.textContent = 'Criar conta e continuar';
-          return;
-        }
-        localStorage.setItem('mbr_session', JSON.stringify(res.data));
-        inlineAuthOnSuccess();
-      })
-      .catch(function(e) { setMsg(e.message, true); btn.disabled = false; btn.textContent = 'Criar conta e continuar'; });
-    return;
-  }
-
-  // login
-  var lEmail = (document.getElementById('inlineLoginEmail') || {}).value || '';
-  var lPass  = (document.getElementById('inlineLoginPass')  || {}).value || '';
-  lEmail = lEmail.trim();
-  if (!lEmail || !lPass) { setMsg('Preencha e-mail e senha.', true); return; }
-
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  fetch(SB_URL + '/auth/v1/token?grant_type=password', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
-    body: JSON.stringify({ email: lEmail, password: lPass }),
-  })
-    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
-    .then(function(res) {
-      if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Credenciais inválidas.');
-      localStorage.setItem('mbr_session', JSON.stringify(res.data));
-      inlineAuthOnSuccess();
-    })
-    .catch(function(e) { setMsg(e.message, true); btn.disabled = false; btn.textContent = 'Entrar e continuar'; });
-}
-
-function inlineAuthOnSuccess() {
-  // Esconde o bloco de auth
-  var gate = document.getElementById('inlineAuthGate');
-  if (gate) gate.style.display = 'none';
-  // Se havia um plano pendente, abre o modal de PIX
-  if (window._inlinePendingPlan) {
-    var p = window._inlinePendingPlan;
-    window._inlinePendingPlan = null;
-    if (typeof openPayModal === 'function') openPayModal(p.planCode, p.price, p.label);
-  }
-}
-
-// Sobrescreve openPayModal para checar login antes de abrir o modal
-var _origOpenPayModal = window.openPayModal;
-window.openPayModal = function(planCode, price, label) {
-  var raw = localStorage.getItem('mbr_session');
-  var session = null;
-  try { var s = JSON.parse(raw || '{}'); session = (s.access_token || (s.session && s.session.access_token)) ? s : null; } catch(e) {}
-
-  if (!session) {
-    // Não logado: mostra auth inline e guarda o plano pendente
-    window._inlinePendingPlan = { planCode: planCode, price: price, label: label };
-    var gate = document.getElementById('inlineAuthGate');
-    if (gate) {
-      gate.style.display = '';
-      gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    return;
-  }
-  // Logado: abre o modal diretamente
-  if (typeof _origOpenPayModal === 'function') _origOpenPayModal(planCode, price, label);
-};
-
-// Mostra o bloco inline se não estiver logado
-(function checkInlineAuth() {
-  var raw = localStorage.getItem('mbr_session');
-  var loggedIn = false;
-  try { var s = JSON.parse(raw || '{}'); loggedIn = !!(s.access_token || (s.session && s.session.access_token)); } catch(e) {}
-  if (!loggedIn) {
-    var gate = document.getElementById('inlineAuthGate');
-    if (gate) gate.style.display = '';
-  }
-})();
-</script>
 
 <script>
 

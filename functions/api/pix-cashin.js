@@ -33,26 +33,6 @@ export async function onRequest({ request, env }) {
     );
   }
 
-  // WiinPay: proxy via Supabase Edge Function (Cloudflare Workers é bloqueado pela WiinPay)
-  if (gatewayName === "wiinpay" && env.SUPABASE_URL) {
-    try {
-      const sbFnUrl = `${env.SUPABASE_URL}/functions/v1/pix-cashin`;
-      const proxyRes = await fetch(sbFnUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${env.SUPABASE_SERVICE_KEY || env.SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ amount, gateway: "wiinpay", wiinpay_api_key: cfg.wiinpay_api_key, site_url, model_id: cfg._model_id || cfg.model_id }),
-      });
-      const proxyData = await proxyRes.json().catch(() => ({}));
-      if (!proxyRes.ok) throw new Error(proxyData.error || `Supabase proxy HTTP ${proxyRes.status}`);
-      return new Response(JSON.stringify(proxyData), { status: 200, headers: CORS });
-    } catch (err) {
-      const msg = (err && err.message) ? err.message : JSON.stringify(err);
-      return new Response(JSON.stringify({ error: msg }), { status: 500, headers: CORS });
-    }
-  }
   const missing = gateway.requiredFields.filter(f => !cfg[f]);
   if (missing.length) {
     return new Response(
@@ -63,8 +43,6 @@ export async function onRequest({ request, env }) {
 
   try {
     const webhookUrl = site_url ? `${site_url}/api/pix-webhook` : null;
-    console.log(`[pix-cashin] gateway=${gatewayName} amount=${amount} hasWebhook=${!!webhookUrl}`);
-    console.log(`[pix-cashin] cfg keys=`, Object.keys(cfg).join(','));
     const result = await gateway.cashin(cfg, amount, webhookUrl);
 
     // Se o lead estiver logado, guarda a ligação user_id <-> cobrança.
@@ -81,8 +59,7 @@ export async function onRequest({ request, env }) {
     return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
   } catch (err) {
     console.error(`[pix-cashin:${gatewayName}]`, err);
-    const msg = (err && err.message) ? err.message : JSON.stringify(err);
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: CORS });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
   }
 }
 

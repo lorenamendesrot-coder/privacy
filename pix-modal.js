@@ -66,8 +66,9 @@
 
     var session = getSession();
     if (!session) {
-      // Auth agora é feito inline na página — fecha o modal se abrir sem sessão
-      fecharModal();
+      // Sem login: mostra a etapa de cadastro/login e só gera o PIX depois
+      _pendingPlan = { planCode: planCode, priceStr: priceStr };
+      showAuthGate();
       return;
     }
 
@@ -233,7 +234,6 @@
       if (gw === 'asaas'    && !cfg.asaas_api_key)                                      missing = true;
       if (gw === 'efibank'  && (!cfg.efibank_client_id || !cfg.efibank_client_secret))  missing = true;
       if (gw === 'primepag' && (!cfg.primepag_client_id || !cfg.primepag_client_secret)) missing = true;
-      if (gw === 'wiinpay'  && !cfg.wiinpay_api_key)                                     missing = true;
 
       if (missing) {
         setElText('pixStatus', '❌ Credenciais do gateway não configuradas no painel admin.');
@@ -437,9 +437,8 @@
     result.style.marginTop = '8px';
 
     if (genBtn) {
-      var container = genBtn.parentNode || body;
-      container.insertBefore(status, genBtn);
-      container.insertBefore(result, genBtn);
+      body.insertBefore(status, genBtn);
+      body.insertBefore(result, genBtn);
       genBtn.style.display = 'none';
     } else {
       body.appendChild(status);

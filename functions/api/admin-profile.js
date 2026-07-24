@@ -13,7 +13,6 @@ const GW_FIELDS = new Set([
   "asaas_api_key","asaas_sandbox",
   "efibank_client_id","efibank_client_secret","efibank_pix_key","efibank_sandbox",
   "primepag_client_id","primepag_client_secret",
-  "wiinpay_api_key",
 ]);
 
 function err(msg, status = 500) {
