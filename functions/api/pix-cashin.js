@@ -46,22 +46,27 @@ export async function onRequest({ request, env }) {
     const result = await gateway.cashin(cfg, amount, webhookUrl);
 
     // Salva plan_code na pending_payments para o webhook usar na expiração
-    if (result.identifier && plan_code && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+    let pendingDebug = null;
+    if (!plan_code) {
+      pendingDebug = { skipped: true, reason: "plan_code ausente no request" };
+    } else if (result.identifier && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
       try {
         const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
-        await supabase.from("pending_payments").upsert({
+        const { error: pendingErr } = await supabase.from("pending_payments").upsert({
           payment_id: result.identifier,
           plan_code: plan_code,
           buyer_email: buyer_email || null,
           amount: parseFloat(amount),
           created_at: new Date().toISOString(),
         }, { onConflict: "payment_id" });
+        if (pendingErr) { pendingDebug = pendingErr; console.error("pending_payments upsert error:", pendingErr); }
       } catch (e) {
+        pendingDebug = { message: e.message };
         console.error("pending_payments upsert:", e);
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
+    return new Response(JSON.stringify({ ok: true, ...result, _pending_debug: pendingDebug }), { status: 200, headers: CORS });
   } catch (err) {
     console.error(`[pix-cashin:${gatewayName}]`, err);
     const msg = (err && err.message) ? err.message : JSON.stringify(err);
