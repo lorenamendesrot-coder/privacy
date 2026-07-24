@@ -1,5 +1,6 @@
 // functions/api/pix-cashin.js
 import { GATEWAYS } from "../../lib/gateways.js";
+import { createClient } from "../../lib/supabase.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-export async function onRequest({ request }) {
+export async function onRequest({ request, env }) {
   if (request.method === "OPTIONS") return new Response(null, { status: 200, headers: CORS });
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405, headers: CORS });
@@ -18,7 +19,7 @@ export async function onRequest({ request }) {
     return new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400, headers: CORS });
   }
 
-  const { amount, site_url, gateway: gatewayName = "syncpay", ...cfg } = body;
+  const { amount, plan_code, site_url, gateway: gatewayName = "syncpay", ...cfg } = body;
 
   if (!amount) {
     return new Response(JSON.stringify({ error: "amount obrigatório" }), { status: 422, headers: CORS });
@@ -42,12 +43,23 @@ export async function onRequest({ request }) {
 
   try {
     const webhookUrl = site_url ? `${site_url}/api/pix-webhook` : null;
-    // DEBUG: loga a chave sendo usada (primeiros 20 chars)
-    console.log('[pix-cashin] gateway:', gatewayName, '| api_key prefix:', (cfg.nexuspag_api_key || '').substring(0, 20), '| key length:', (cfg.nexuspag_api_key || '').length);
     const result = await gateway.cashin(cfg, amount, webhookUrl);
+
+    // Salva plan_code na pending_payments para o webhook usar na expiração
+    if (result.identifier && plan_code && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+      const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+      await supabase.from("pending_payments").upsert({
+        payment_id: result.identifier,
+        plan_code: plan_code,
+        amount: parseFloat(amount),
+        created_at: new Date().toISOString(),
+      }, { onConflict: "payment_id" }).catch(e => console.error("pending_payments upsert:", e));
+    }
+
     return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
   } catch (err) {
     console.error(`[pix-cashin:${gatewayName}]`, err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: CORS });
+    const msg = (err && err.message) ? err.message : JSON.stringify(err);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: CORS });
   }
 }

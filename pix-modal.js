@@ -7,6 +7,7 @@
 
   var _gwConfig = null;
   var _selectedPrice = 0;
+  var _selectedPlanCode = '';
   var _timerInterval = null;
   var _pollingInterval = null;
   var _pixLoading = false; // guard contra chamadas duplicadas
@@ -22,11 +23,11 @@
 
   // ── Abre modal e já dispara geração do PIX ──────────────
   window.openPayModal = function (planCode, priceStr) {
-    // Bloqueia double-click / double-tap / eventos duplicados
     if (_pixLoading) return;
 
     var raw = (priceStr || '0').replace(/[^\d,\.]/g, '').replace(',', '.');
     _selectedPrice = parseFloat(raw) || 0;
+    _selectedPlanCode = planCode || '';
 
     var modal = document.getElementById('payModal');
     if (!modal) return;
@@ -102,7 +103,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign(
-          { amount: _selectedPrice, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
+          { amount: _selectedPrice, plan_code: _selectedPlanCode, gateway: cfg.gateway || 'syncpay', site_url: cfg.site_url || '' },
           cfg // passa todas as credenciais da config (client_id, api_key, etc.)
         )),
       })

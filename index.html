@@ -2639,7 +2639,7 @@ main.wrap{
             style="width:100%;padding:15px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;transition:background .2s">Continuar</button>
           <p style="text-align:center;font-size:14px;color:#888;margin:0">
             Já tem uma conta?
-            <a href="#" onclick="agSwitchToLogin();return false" style="color:var(--accent,#e91e8c);font-weight:600;text-decoration:none"> Cadastre-se</a>
+            <a href="#" onclick="agSwitchToLogin();return false" style="color:var(--accent,#e91e8c);font-weight:600;text-decoration:none"> Entre aqui</a>
           </p>
         </div>
 
@@ -2843,6 +2843,30 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
   };
 
   function agOnSuccess() {
+    // Verifica se o lead já tem acesso ativo pelo email
+    var session = getSession();
+    var email = session && (session.user && session.user.email);
+    if (email) {
+      fetch(SB_URL + '/rest/v1/access_tokens?payer_email=eq.' + encodeURIComponent(email) + '&expires_at=gt.' + new Date().toISOString() + '&select=token&limit=1', {
+        headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+      })
+      .then(function(r) { return r.ok ? r.json() : []; })
+      .then(function(rows) {
+        if (rows && rows.length && rows[0].token) {
+          // Já tem acesso ativo — redireciona direto
+          window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
+          return;
+        }
+        // Sem acesso — segue para gerar PIX
+        agGoToPayment();
+      })
+      .catch(function() { agGoToPayment(); });
+    } else {
+      agGoToPayment();
+    }
+  }
+
+  function agGoToPayment() {
     document.getElementById('authGateStep').style.display = 'none';
     document.getElementById('paymentStep').style.display = '';
     if (_pendingPlan) {
@@ -2869,9 +2893,25 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     }
 
     if (getSession()) {
-      // Já logado — chama a função interna do pix-modal diretamente
-      if (typeof window._pixDirectOpen === 'function') {
-        window._pixDirectOpen(planCode, priceStr);
+      var session = getSession();
+      var email = session && session.user && session.user.email;
+      if (email) {
+        fetch(SB_URL + '/rest/v1/access_tokens?payer_email=eq.' + encodeURIComponent(email) + '&expires_at=gt.' + new Date().toISOString() + '&select=token&limit=1', {
+          headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+        })
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(rows) {
+          if (rows && rows.length && rows[0].token) {
+            window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
+            return;
+          }
+          if (typeof window._pixDirectOpen === 'function') window._pixDirectOpen(planCode, priceStr);
+        })
+        .catch(function() {
+          if (typeof window._pixDirectOpen === 'function') window._pixDirectOpen(planCode, priceStr);
+        });
+      } else {
+        if (typeof window._pixDirectOpen === 'function') window._pixDirectOpen(planCode, priceStr);
       }
       return;
     }
