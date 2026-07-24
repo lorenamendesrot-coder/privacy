@@ -287,8 +287,9 @@
     result.style.marginTop = '8px';
 
     if (genBtn) {
-      body.insertBefore(status, genBtn);
-      body.insertBefore(result, genBtn);
+      var insertParent = genBtn.parentNode || body;
+      insertParent.insertBefore(status, genBtn);
+      insertParent.insertBefore(result, genBtn);
       genBtn.style.display = 'none';
     } else {
       body.appendChild(status);
