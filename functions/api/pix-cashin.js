@@ -47,13 +47,17 @@ export async function onRequest({ request, env }) {
 
     // Salva plan_code na pending_payments para o webhook usar na expiração
     if (result.identifier && plan_code && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
-      const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
-      await supabase.from("pending_payments").upsert({
-        payment_id: result.identifier,
-        plan_code: plan_code,
-        amount: parseFloat(amount),
-        created_at: new Date().toISOString(),
-      }, { onConflict: "payment_id" }).catch(e => console.error("pending_payments upsert:", e));
+      try {
+        const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+        await supabase.from("pending_payments").upsert({
+          payment_id: result.identifier,
+          plan_code: plan_code,
+          amount: parseFloat(amount),
+          created_at: new Date().toISOString(),
+        }, { onConflict: "payment_id" });
+      } catch (e) {
+        console.error("pending_payments upsert:", e);
+      }
     }
 
     return new Response(JSON.stringify({ ok: true, ...result }), { status: 200, headers: CORS });
