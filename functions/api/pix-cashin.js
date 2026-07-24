@@ -53,6 +53,7 @@ export async function onRequest({ request, env }) {
       try {
         const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
         const { error: pendingErr } = await supabase.from("pending_payments").upsert({
+          identifier: result.identifier,
           payment_id: result.identifier,
           plan_code: plan_code,
           buyer_email: buyer_email || null,
