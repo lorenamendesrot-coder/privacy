@@ -37,9 +37,18 @@
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
+    // Garante que paymentStep visível e authGateStep oculto
+    var ag = document.getElementById('authGateStep');
+    var ps = document.getElementById('paymentStep');
+    if (ag) ag.style.display = 'none';
+    if (ps) ps.style.display = '';
+
     // Gera o PIX imediatamente
     gerarPix();
   };
+
+  // Expõe função interna para o auth gate poder chamar após login
+  window._pixDirectOpen = window.openPayModal;
 
   // ── Fecha modal ─────────────────────────────────────────
   function fecharModal() {

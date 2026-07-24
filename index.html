@@ -2847,26 +2847,53 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     document.getElementById('paymentStep').style.display = '';
     if (_pendingPlan) {
       var p = _pendingPlan; _pendingPlan = null;
-      setTimeout(function() { _origOpen(p.planCode, p.priceStr); }, 100);
+      setTimeout(function() {
+        if (typeof window._pixDirectOpen === 'function') {
+          window._pixDirectOpen(p.planCode, p.priceStr);
+        }
+      }, 150);
     }
   }
 
-  // Intercepta openPayModal
-  var _origOpen = window.openPayModal;
-  window.openPayModal = function(planCode, priceStr) {
+  // Intercepta openPayModal — usa setTimeout para garantir que pix-modal.js já executou
+  var _origOpen = null;
+  window.addEventListener('load', function() {
+    _origOpen = window._pixModalOpen || null;
+  });
+
+  window.openPayModal = function(planCode, priceStr, label) {
+    // Pega a função original do pix-modal (definida como window.openPayModal antes do override)
+    if (!_origOpen) {
+      // fallback: tenta pegar direto do pix-modal via evento
+      _origOpen = window._pixOpenPayModal || null;
+    }
+
     if (getSession()) {
-      // Já logado — vai direto pro pagamento
-      if (typeof _origOpen === 'function') _origOpen(planCode, priceStr);
+      // Já logado — chama a função interna do pix-modal diretamente
+      if (typeof window._pixDirectOpen === 'function') {
+        window._pixDirectOpen(planCode, priceStr);
+      }
       return;
     }
-    // Não logado — abre modal no auth gate
+
+    // Não logado — mostra auth gate
     _pendingPlan = { planCode: planCode, priceStr: priceStr };
-    // Abre o modal manualmente (sem chamar _origOpen que geraria PIX)
-    var overlay = document.getElementById('payModal');
-    if (overlay) { overlay.style.display = 'flex'; overlay.setAttribute('aria-hidden','false'); }
-    document.getElementById('authGateStep').style.display = '';
-    document.getElementById('paymentStep').style.display = 'none';
-    // Popula header do modal com o plano
+
+    // Abre o modal usando classList igual o pix-modal faz
+    var modal = document.getElementById('payModal');
+    if (modal) {
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Mostra auth gate, esconde pagamento
+    var ag = document.getElementById('authGateStep');
+    var ps = document.getElementById('paymentStep');
+    if (ag) ag.style.display = '';
+    if (ps) ps.style.display = 'none';
+
+    // Atualiza preço no header
     var priceEl = document.getElementById('payPriceSummary');
     if (priceEl) priceEl.textContent = priceStr || '';
   };
