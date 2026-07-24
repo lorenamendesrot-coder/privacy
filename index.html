@@ -2744,7 +2744,19 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     btn.style.background = active ? 'var(--accent,#e91e8c)' : '#ccc';
   }
 
-  function validateRegInputs() {
+  function traduzirErro(msg) {
+    if (!msg) return 'Ocorreu um erro. Tente novamente.';
+    var m = msg.toLowerCase();
+    if (m.includes('invalid login') || m.includes('invalid credentials') || m.includes('wrong password')) return 'E-mail ou senha incorretos.';
+    if (m.includes('user already registered') || m.includes('already been registered') || m.includes('already exists')) return 'Este e-mail já está cadastrado. Faça login.';
+    if (m.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
+    if (m.includes('signup is disabled')) return 'Cadastro temporariamente desativado.';
+    if (m.includes('password should be')) return 'A senha precisa ter pelo menos 6 caracteres.';
+    if (m.includes('unable to validate') || m.includes('token')) return 'Sessão expirada. Tente novamente.';
+    if (m.includes('rate limit') || m.includes('too many')) return 'Muitas tentativas. Aguarde alguns minutos.';
+    if (m.includes('network') || m.includes('fetch')) return 'Erro de conexão. Verifique sua internet.';
+    return msg;
+  }
     var email = (document.getElementById('agRegEmail') || {}).value || '';
     var pass  = (document.getElementById('agRegPass')  || {}).value || '';
     setBtnActive('agRegBtn', email.includes('@') && pass.length >= 6);
@@ -2807,7 +2819,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     })
     .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
     .then(function(res) {
-      if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Erro ao criar conta.');
+      if (!res.ok) throw new Error(traduzirErro(res.data.error_description || res.data.msg || res.data.message));
       if (!res.data.access_token) {
         setMsg('Verifique seu e-mail para confirmar o cadastro.', false);
         btn.disabled = false; btn.textContent = 'Continuar';
@@ -2835,7 +2847,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     })
     .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
     .then(function(res) {
-      if (!res.ok) throw new Error(res.data.error_description || res.data.msg || 'Credenciais inválidas.');
+      if (!res.ok) throw new Error(traduzirErro(res.data.error_description || res.data.msg || res.data.message));
       localStorage.setItem('mbr_session', JSON.stringify(res.data));
       agOnSuccess();
     })
