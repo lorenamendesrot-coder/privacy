@@ -3140,6 +3140,10 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
       var offerCard = document.getElementById('offerCard');
       if (offerCard) offerCard.style.display = '';
     }
+    if (c.hide_plans_list) {
+      var plansBlock = document.querySelector('.plans');
+      if (plansBlock) plansBlock.style.display = 'none';
+    }
 
     var bens = document.querySelectorAll('.pm-benefits li span:last-child');
     if (c.benefit_1 && bens[0]) bens[0].textContent = c.benefit_1;

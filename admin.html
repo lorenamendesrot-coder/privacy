@@ -361,6 +361,14 @@
         </div>
         <div style="font-size:12px;color:var(--text-dim);margin:-8px 0 16px">Deixe em branco para não exibir esse bloco na página.</div>
 
+        <div class="field full">
+          <label>Lista de planos (1 mês / 3 meses / 12 meses)</label>
+          <select id="pHidePlansList" style="width:100%;padding:10px 12px;background:var(--surface2,#111);border:1px solid var(--border,#222);border-radius:8px;color:var(--text,#fff);font-size:14px;">
+            <option value="0">Mostrar normalmente (junto com a oferta em destaque)</option>
+            <option value="1">Ocultar (mostrar somente o card de oferta em destaque)</option>
+          </select>
+        </div>
+
         <div class="section-divider" style="margin-top:20px">Benefícios do modal de pagamento</div>
         <div class="field">
           <label>Benefício 1</label>
@@ -775,6 +783,7 @@ function applyProfile(cfg) {
   setVal('pHandle',          cfg.handle            || '');
   setVal('pBio',             cfg.bio               || '');
   setVal('pOfferMsg',        cfg.offer_message     || '');
+  setVal('pHidePlansList',   cfg.hide_plans_list   ? '1' : '0');
   setVal('pTelegram',        cfg.telegram          || '');
   setVal('pStatFotos',       cfg.stats_fotos       || '');
   setVal('pStatVideos',      cfg.stats_videos      || '');
@@ -902,6 +911,7 @@ async function saveProfile() {
     handle:           getVal('pHandle'),
     bio:              getVal('pBio'),
     offer_message:    getVal('pOfferMsg'),
+    hide_plans_list:  getVal('pHidePlansList') === '1',
     telegram:         getVal('pTelegram'),
     stats_fotos:      getVal('pStatFotos'),
     stats_videos:     getVal('pStatVideos'),
