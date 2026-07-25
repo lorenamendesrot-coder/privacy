@@ -2518,7 +2518,7 @@ main.wrap{
         <p class="bio-text" id="bioTxt">
 
         </p>
-        <button class="toggle-bio" id="bioBtn" aria-expanded="false" type="button">Ler mais</button>
+        <button class="toggle-bio" id="bioBtn" aria-expanded="false" type="button" onclick="toggleBio()">Ler mais</button>
 <div class="social-below-bio" aria-label="Redes sociais">
 
   <!-- TELEGRAM -->
@@ -3215,6 +3215,14 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
   }
 
   function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+  function toggleBio() {
+    var card = document.getElementById('cardPerfil');
+    var btn  = document.getElementById('bioBtn');
+    if (!card || !btn) return;
+    var expanded = card.classList.toggle('expanded');
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    btn.textContent = expanded ? 'Ler menos' : 'Ler mais';
+  }
   function setImg(id, src) {
     var el = document.getElementById(id);
     if (!el || !src) return;
