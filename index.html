@@ -3223,6 +3223,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
     btn.textContent = expanded ? 'Ler menos' : 'Ler mais';
   }
+  window.toggleBio = toggleBio;
   function setImg(id, src) {
     var el = document.getElementById(id);
     if (!el || !src) return;
