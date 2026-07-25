@@ -620,6 +620,13 @@ main.wrap{
   gap: 6px;
   margin-bottom: 14px;
 }
+.offer-timer {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font-size: 13px;
+  color: #5b6b9c;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
 .offer-msg-row {
   display: flex;
   align-items: center;
@@ -2522,6 +2529,7 @@ main.wrap{
 </div>
 <div class="offer-card" id="offerCard" style="display:none">
   <div class="offer-card-head"><span class="offer-card-icon">✨</span> Oferta de assinatura</div>
+  <div class="offer-timer" id="offerTimer" style="display:none"></div>
   <div class="offer-msg-row">
     <img class="offer-avatar" id="offerAvatar" src="" alt="">
     <div class="offer-msg" id="offerMsg"></div>
@@ -3139,6 +3147,40 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
       }
       var offerCard = document.getElementById('offerCard');
       if (offerCard) offerCard.style.display = '';
+
+      var hrs = parseFloat(c.offer_timer_hours);
+      if (hrs > 0) startOfferTimer(hrs);
+    }
+
+    function startOfferTimer(hours) {
+      var key = 'offer_deadline_' + (window.MODEL_ID || 'default');
+      var deadline = parseInt(localStorage.getItem(key) || '0', 10);
+      var now = Date.now();
+      if (!deadline || deadline <= now) {
+        deadline = now + hours * 3600 * 1000;
+        try { localStorage.setItem(key, String(deadline)); } catch (e) {}
+      }
+      var el = document.getElementById('offerTimer');
+      if (!el) return;
+      el.style.display = '';
+      function tick() {
+        var diff = deadline - Date.now();
+        if (diff <= 0) {
+          deadline = Date.now() + hours * 3600 * 1000;
+          try { localStorage.setItem(key, String(deadline)); } catch (e) {}
+          diff = deadline - Date.now();
+        }
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        var txt = 'Termina em ';
+        if (d > 0) txt += d + (d === 1 ? ' dia, ' : ' dias, ');
+        txt += h + 'h ' + m + 'm ' + s + 's';
+        el.textContent = txt;
+      }
+      tick();
+      setInterval(tick, 1000);
     }
 
     // ── Visibilidade individual de cada plano ──

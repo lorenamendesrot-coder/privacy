@@ -359,6 +359,11 @@
           <label>Mensagem de destaque (aparece no card de oferta, acima do botão de assinar)</label>
           <textarea id="pOfferMsg" placeholder="Ex: Conteúdo exclusivo, sem censura, direto pra você!"></textarea>
         </div>
+        <div class="field full">
+          <label>Temporizador da oferta (em horas, ex: 24)</label>
+          <input id="pOfferTimerHours" type="number" min="0" step="1" placeholder="Deixe em branco para não mostrar temporizador">
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin:-8px 0 16px">O contador começa a contar quando a pessoa entra na página e reinicia sozinho ao zerar (cada visitante vê sua própria contagem).</div>
         <div style="font-size:12px;color:var(--text-dim);margin:-8px 0 16px">Deixe em branco para não exibir esse bloco na página.</div>
 
         <div class="field full">
@@ -805,6 +810,7 @@ function applyProfile(cfg) {
   setVal('pHandle',          cfg.handle            || '');
   setVal('pBio',             cfg.bio               || '');
   setVal('pOfferMsg',        cfg.offer_message     || '');
+  setVal('pOfferTimerHours', cfg.offer_timer_hours || '');
   setVal('pShowOffer',       cfg.show_offer_card === false ? '0' : '1');
   setVal('pShowPlan1m',      cfg.show_plan_1m      === false ? '0' : '1');
   setVal('pShowPlan3m',      cfg.show_plan_3m      === false ? '0' : '1');
@@ -936,6 +942,7 @@ async function saveProfile() {
     handle:           getVal('pHandle'),
     bio:              getVal('pBio'),
     offer_message:    getVal('pOfferMsg'),
+    offer_timer_hours: getVal('pOfferTimerHours'),
     show_offer_card:  getVal('pShowOffer')    === '1',
     show_plan_1m:     getVal('pShowPlan1m')   === '1',
     show_plan_3m:     getVal('pShowPlan3m')   === '1',
