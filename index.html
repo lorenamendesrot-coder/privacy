@@ -3112,7 +3112,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     applyPlanPrice('PLAN_12M', 'price12M', 'priceOld12M', 'badge12M', c.plan_12m_price, c.plan_12m_full, c.plan_12m_off);
 
     // ── Card de oferta em destaque (configurável no admin, usa preço do plano 1 mês) ──
-    if (c.offer_message) {
+    if (c.offer_message && c.show_offer_card !== false) {
       setText('offerMsg', c.offer_message);
       var p1  = document.getElementById('price1M');
       var po1 = document.getElementById('priceOld1M');
@@ -3140,7 +3140,28 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
       var offerCard = document.getElementById('offerCard');
       if (offerCard) offerCard.style.display = '';
     }
-    if (c.hide_plans_list) {
+
+    // ── Visibilidade individual de cada plano ──
+    function setPlanVisible(planCode, visible) {
+      var el = document.querySelector('.sub-btn[data-plan-code="' + planCode + '"]');
+      if (!el) return;
+      var wrap = el.closest('.plan-grid') || el;
+      wrap.style.display = visible ? '' : 'none';
+    }
+    var show1m  = c.show_plan_1m  !== false;
+    var show3m  = c.show_plan_3m  !== false;
+    var show12m = c.show_plan_12m !== false;
+    setPlanVisible('PLAN_1M',  show1m);
+    setPlanVisible('PLAN_3M',  show3m);
+    setPlanVisible('PLAN_12M', show12m);
+
+    // se as duas promoções (3m e 12m) estiverem ocultas, esconde a seção "Promoções" inteira
+    if (!show3m && !show12m) {
+      var promos = document.getElementById('promos');
+      if (promos) promos.style.display = 'none';
+    }
+    // se nenhum plano estiver visível, esconde o bloco "Assinaturas" inteiro
+    if (!show1m && !show3m && !show12m) {
       var plansBlock = document.querySelector('.plans');
       if (plansBlock) plansBlock.style.display = 'none';
     }
