@@ -39,15 +39,16 @@ a { color: inherit; text-decoration: none; }
   backdrop-filter: blur(20px);
 }
 .auth-logo {
-  font-family: 'Syne', sans-serif;
-  font-size: 26px; font-weight: 800;
-  color: var(--accent);
-  margin-bottom: 8px;
-  letter-spacing: -1px;
+  display: block;
+  height: 26px;
+  width: auto;
+  margin: 0 auto 14px;
+  filter: brightness(0) invert(1);
 }
 .auth-sub {
   font-size: 13px; color: var(--text-dim);
   margin-bottom: 28px; line-height: 1.5;
+  text-align: center;
 }
 .auth-tabs {
   display: flex;
@@ -398,7 +399,7 @@ a { color: inherit; text-decoration: none; }
 
   /* Auth card */
   .auth-card { padding: 28px 20px; border-radius: 18px; }
-  .auth-logo { font-size: 22px; }
+  .auth-logo { height: 22px; }
   .auth-sub { font-size: 12px; margin-bottom: 20px; }
   .field input { font-size: 16px; }
   .btn-primary { font-size: 14px; padding: 14px; }
@@ -460,7 +461,7 @@ a { color: inherit; text-decoration: none; }
 <!-- AUTH SCREEN -->
 <div id="authScreen">
   <div class="auth-card">
-    <div class="auth-logo">privacy</div>
+    <img class="auth-logo" src="images/logo-black.svg" alt="privacy">
     <div class="auth-sub">Acesse seu conteúdo exclusivo</div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Entrar</button>
