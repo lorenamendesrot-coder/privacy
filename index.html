@@ -603,6 +603,81 @@ main.wrap{
   letter-spacing: 0;
 }
 
+/* ── Card de oferta em destaque ── */
+.offer-card {
+  background: #f8f2ea;
+  border-radius: 20px;
+  padding: 18px 18px 22px;
+  margin: 0 0 18px;
+}
+.offer-card-head {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #1c1c28;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.offer-msg-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 26px;
+}
+.offer-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #eee;
+}
+.offer-msg {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1c1c28;
+  text-transform: uppercase;
+  line-height: 1.45;
+}
+.offer-cta-wrap { position: relative; }
+.offer-save-badge {
+  position: absolute;
+  top: -12px; left: 14px;
+  background: #e4f9e9;
+  color: #18a34a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  z-index: 2;
+  white-space: nowrap;
+}
+.offer-cta {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: 17px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  color: #1c1c28;
+  text-align: center;
+  background: linear-gradient(90deg, #f6842c, #f7b48f);
+  cursor: pointer;
+}
+.offer-old-price {
+  text-align: right;
+  font-size: 12px;
+  color: #5b6b9c;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+.offer-old-price .strike { text-decoration: line-through; color: #8892b0; }
+
 /* texto de desconto (ex: (5% off)) estilo referência do usuário */
 .discount-badge {
   display: inline;
@@ -2445,6 +2520,20 @@ main.wrap{
   </a>
 
 </div>
+<div class="offer-card" id="offerCard" style="display:none">
+  <div class="offer-card-head"><span class="offer-card-icon">✨</span> Oferta de assinatura</div>
+  <div class="offer-msg-row">
+    <img class="offer-avatar" id="offerAvatar" src="" alt="">
+    <div class="offer-msg" id="offerMsg"></div>
+  </div>
+  <div class="offer-cta-wrap">
+    <span class="offer-save-badge" id="offerSaveBadge"></span>
+    <div class="offer-cta" id="offerCta" role="button" tabindex="0">
+      Assinar agora <span id="offerPrice"></span>
+    </div>
+    <div class="offer-old-price">Preço original <span class="strike" id="offerOldPrice"></span></div>
+  </div>
+</div>
 <div class="plans">
   <h3 class="plans-title">Assinaturas</h3>
 
@@ -2970,7 +3059,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     .catch(function () {});
 
   function applyConfig(c) {
-    if (c.avatar_url) { setImg('siteAvatar', c.avatar_url); setImg('postAvatar', c.avatar_url); setImg('payAvatar', c.avatar_url); }
+    if (c.avatar_url) { setImg('siteAvatar', c.avatar_url); setImg('postAvatar', c.avatar_url); setImg('payAvatar', c.avatar_url); setImg('offerAvatar', c.avatar_url); }
     if (c.banner_url) { setImg('siteBanner', c.banner_url); setImg('modalBanner', c.banner_url); }
     if (c.name)       { setText('siteName', c.name); setText('postName', c.name); setText('payName', c.name); document.title = 'Privacy | ' + c.name; }
     if (c.handle)     { setText('siteHandle', c.handle); setText('postHandle', c.handle); setText('payHandle', c.handle); }
@@ -3021,6 +3110,37 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     applyPlanPrice('PLAN_1M',  'price1M',  'priceOld1M',  'badge1M',  c.plan_1m_price,  c.plan_1m_full,  c.plan_1m_off);
     applyPlanPrice('PLAN_3M',  'price3M',  'priceOld3M',  'badge3M',  c.plan_3m_price,  c.plan_3m_full,  c.plan_3m_off);
     applyPlanPrice('PLAN_12M', 'price12M', 'priceOld12M', 'badge12M', c.plan_12m_price, c.plan_12m_full, c.plan_12m_off);
+
+    // ── Card de oferta em destaque (configurável no admin, usa preço do plano 1 mês) ──
+    if (c.offer_message) {
+      setText('offerMsg', c.offer_message);
+      var p1  = document.getElementById('price1M');
+      var po1 = document.getElementById('priceOld1M');
+      if (p1) setText('offerPrice', p1.textContent);
+      if (po1 && po1.style.display !== 'none' && po1.textContent) {
+        setText('offerOldPrice', po1.textContent);
+      } else {
+        var oldWrap = document.querySelector('.offer-old-price');
+        if (oldWrap) oldWrap.style.display = 'none';
+      }
+      if (c.plan_1m_off && parseFloat(c.plan_1m_off) > 0) {
+        setText('offerSaveBadge', 'Economize ' + Math.round(parseFloat(c.plan_1m_off)) + '%');
+      } else {
+        var sb = document.getElementById('offerSaveBadge');
+        if (sb) sb.style.display = 'none';
+      }
+      var offerCta = document.getElementById('offerCta');
+      if (offerCta) {
+        offerCta.onclick = offerCta.onkeydown = function (ev) {
+          if (ev && ev.type === 'keydown' && ev.key !== 'Enter' && ev.key !== ' ') return;
+          var btn1m = document.querySelector('[data-plan-code="PLAN_1M"]');
+          openPayModal('PLAN_1M', btn1m ? btn1m.dataset.price : '', '1 mês');
+        };
+      }
+      var offerCard = document.getElementById('offerCard');
+      if (offerCard) offerCard.style.display = '';
+    }
+
     var bens = document.querySelectorAll('.pm-benefits li span:last-child');
     if (c.benefit_1 && bens[0]) bens[0].textContent = c.benefit_1;
     if (c.benefit_2 && bens[1]) bens[1].textContent = c.benefit_2;

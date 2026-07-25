@@ -354,6 +354,13 @@
 
         </div>
 
+        <div class="section-divider" style="margin-top:20px">Oferta de assinatura em destaque</div>
+        <div class="field full">
+          <label>Mensagem de destaque (aparece no card de oferta, acima do botão de assinar)</label>
+          <textarea id="pOfferMsg" placeholder="Ex: Conteúdo exclusivo, sem censura, direto pra você!"></textarea>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin:-8px 0 16px">Deixe em branco para não exibir esse bloco na página.</div>
+
         <div class="section-divider" style="margin-top:20px">Benefícios do modal de pagamento</div>
         <div class="field">
           <label>Benefício 1</label>
@@ -767,6 +774,7 @@ function applyProfile(cfg) {
   setVal('pName',            cfg.name              || '');
   setVal('pHandle',          cfg.handle            || '');
   setVal('pBio',             cfg.bio               || '');
+  setVal('pOfferMsg',        cfg.offer_message     || '');
   setVal('pTelegram',        cfg.telegram          || '');
   setVal('pStatFotos',       cfg.stats_fotos       || '');
   setVal('pStatVideos',      cfg.stats_videos      || '');
@@ -893,6 +901,7 @@ async function saveProfile() {
     name:             getVal('pName'),
     handle:           getVal('pHandle'),
     bio:              getVal('pBio'),
+    offer_message:    getVal('pOfferMsg'),
     telegram:         getVal('pTelegram'),
     stats_fotos:      getVal('pStatFotos'),
     stats_videos:     getVal('pStatVideos'),
