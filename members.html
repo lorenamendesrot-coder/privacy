@@ -579,6 +579,20 @@ function setMsg(text, type) {
   el.className = 'auth-msg' + (type ? ' ' + type : '');
 }
 
+function traduzirErro(msg) {
+  if (!msg) return 'Ocorreu um erro. Tente novamente.';
+  var m = msg.toLowerCase();
+  if (m.includes('invalid login') || m.includes('invalid credentials') || m.includes('wrong password')) return 'E-mail ou senha incorretos.';
+  if (m.includes('user already registered') || m.includes('already been registered') || m.includes('already exists')) return 'Este e-mail já está cadastrado. Faça login.';
+  if (m.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
+  if (m.includes('signup is disabled')) return 'Cadastro temporariamente desativado.';
+  if (m.includes('password should be')) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if (m.includes('unable to validate') || m.includes('token')) return 'Sessão expirada. Tente novamente.';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Muitas tentativas. Aguarde alguns minutos.';
+  if (m.includes('network') || m.includes('fetch')) return 'Erro de conexão. Verifique sua internet.';
+  return msg;
+}
+
 function setLoading(btn, loading, label) {
   btn.disabled = loading;
   btn.textContent = loading ? 'Aguarde...' : (label || btn._orig);
@@ -597,7 +611,7 @@ async function doLogin() {
       body: JSON.stringify({ email, password: pass }),
     });
     var data = await res.json();
-    if (!res.ok) throw new Error(data.error_description || data.msg || 'Credenciais inválidas.');
+    if (!res.ok) throw new Error(traduzirErro(data.error_description || data.msg || data.message));
     currentUser = data;
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
     showMembers();
@@ -644,7 +658,7 @@ async function doRegister() {
       body: JSON.stringify({ email, password: pass }),
     });
     var data = await res.json();
-    if (!res.ok) throw new Error(data.error_description || data.msg || 'Erro ao criar conta.');
+    if (!res.ok) throw new Error(traduzirErro(data.error_description || data.msg || data.message));
     if (data.user) {
       try {
         await fetch('/api/activate-access', {
