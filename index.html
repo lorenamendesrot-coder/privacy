@@ -3197,6 +3197,13 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
     setPlanVisible('PLAN_3M',  show3m);
     setPlanVisible('PLAN_12M', show12m);
 
+    // se o plano de 1 mês estiver oculto, remove o título "Promoções" e deixa
+    // só "Assinaturas" como cabeçalho único pros planos restantes
+    if (!show1m && (show3m || show12m)) {
+      var promosHead = document.getElementById('promosHead');
+      if (promosHead) promosHead.style.display = 'none';
+    }
+
     // se as duas promoções (3m e 12m) estiverem ocultas, esconde a seção "Promoções" inteira
     if (!show3m && !show12m) {
       var promos = document.getElementById('promos');
