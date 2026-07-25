@@ -474,11 +474,11 @@ main.wrap{
   z-index:10;
 }
 .pay-avatar{
-  width:78px;
-  height:78px;
-  border-radius:50%;
+  width:64px;
+  height:64px;
+  border-radius:14px;
   overflow:hidden;
-  border:3px solid rgba(0,0,0,.35);
+  border:2px solid rgba(0,0,0,.12);
   background:#fff;
 }
 .pay-avatar img{width:100%;height:100%;object-fit:cover}
@@ -2030,9 +2030,17 @@ main.wrap{
 
 /* QR code menor */
 #pixQrImg{
-  width: 160px !important;
-  height: 160px !important;
-  margin: 8px auto 8px !important;
+  width: 190px !important;
+  height: 190px !important;
+  margin: 0 auto !important;
+}
+#qrcode{
+  width: fit-content !important;
+  margin: 14px auto !important;
+  padding: 12px !important;
+  border: 1.5px solid rgba(30,40,90,.35) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
 }
 
 /* Textarea pix copia e cola */
