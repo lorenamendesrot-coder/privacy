@@ -89,7 +89,7 @@
       var buyerEmail = '';
       try {
         var sess = JSON.parse(localStorage.getItem('mbr_session') || '{}');
-        buyerEmail = (sess.user && sess.user.email) || '';
+        buyerEmail = (sess.user && sess.user.email) || (sess.session && sess.session.user && sess.session.user.email) || '';
       } catch (e) {}
 
       // Valida campos obrigatórios por gateway
@@ -198,11 +198,12 @@
     if (data.pix_code) {
       var qrSrc = data.qr_code_base64
         ? data.qr_code_base64
-        : 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(data.pix_code);
-      html += '<img id="pixQrImg" src="' + qrSrc + '" alt="QR Code PIX" style="display:block;margin:8px auto;width:160px;height:160px;border-radius:12px;">';
-      html += '<p style="font-size:11px;color:var(--text-dim,#888);text-align:center;margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em">Pix Copia e Cola</p>';
-      html += '<textarea id="pixCodigo" readonly style="width:100%;box-sizing:border-box;background:#ffffff;border:1px solid #ddd;border-radius:8px;padding:10px;color:#111111;font-size:11px;font-family:monospace;resize:none;min-height:56px;word-break:break-all;outline:none">' + escHtml(data.pix_code) + '</textarea>';
-      html += '<button onclick="pixCopiar()" style="display:block;width:100%;margin-top:10px;padding:13px;background:var(--accent,#e91e8c);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar código PIX</button>';
+        : 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.pix_code);
+      html += '<div style="width:fit-content;margin:8px auto 14px;padding:12px;border:2px solid #2a3562;border-radius:10px;background:#fff;">';
+      html +=   '<img id="pixQrImg" src="' + qrSrc + '" alt="QR Code PIX" style="display:block;width:200px;height:200px;">';
+      html += '</div>';
+      html += '<textarea id="pixCodigo" readonly style="width:100%;box-sizing:border-box;background:#ffffff;border:1px solid #ddd;border-radius:18px;padding:12px 16px;color:#111111;font-size:11px;font-family:monospace;resize:none;min-height:50px;word-break:break-all;outline:none;text-align:center">' + escHtml(data.pix_code) + '</textarea>';
+      html += '<button onclick="pixCopiar()" style="display:block;width:100%;margin-top:10px;padding:13px;background:#f6842c;color:#fff;border:none;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;">📋 Copiar chave Pix</button>';
     }
 
     html += '<p id="pixTimer" style="text-align:center;font-size:12px;color:var(--text-dim,#888);margin-top:14px">⏱ Expira em <strong>30:00</strong></p>';
