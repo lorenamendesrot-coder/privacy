@@ -603,21 +603,18 @@ main.wrap{
   letter-spacing: 0;
 }
 
-/* badge de desconto (ex: -50%) estilo Privacy */
+/* texto de desconto (ex: (5% off)) estilo referência do usuário */
 .discount-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  color: #F6842C;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 2px 6px;
-  border-radius: 999px;
+  display: inline;
+  background: none;
+  color: inherit;
+  opacity: 0.85;
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 0;
+  border-radius: 0;
   margin-left: 6px;
-  vertical-align: middle;
-  border: 1px solid rgba(246,132,44,0.25);
+  border: none;
   white-space: nowrap;
 }
 
@@ -3017,7 +3014,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
         var oldEl = document.getElementById(priceOldId);
         if (oldEl) { oldEl.textContent = 'R$ ' + fullStr; oldEl.style.display = 'inline'; }
         var badgeEl = document.getElementById(badgeId);
-        if (badgeEl) { badgeEl.textContent = '-' + Math.round(pct) + '%'; badgeEl.style.display = 'inline-flex'; }
+        if (badgeEl) { badgeEl.textContent = '(' + Math.round(pct) + '% off)'; badgeEl.style.display = 'inline'; }
       }
     }
 
