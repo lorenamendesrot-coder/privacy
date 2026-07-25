@@ -3148,16 +3148,16 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
       var offerCard = document.getElementById('offerCard');
       if (offerCard) offerCard.style.display = '';
 
-      var hrs = parseFloat(c.offer_timer_hours);
-      if (hrs > 0) startOfferTimer(hrs);
+      var mins = parseFloat(c.offer_timer_minutes);
+      if (mins > 0) startOfferTimer(mins);
     }
 
-    function startOfferTimer(hours) {
+    function startOfferTimer(minutes) {
       var key = 'offer_deadline_' + (window.MODEL_ID || 'default');
       var deadline = parseInt(localStorage.getItem(key) || '0', 10);
       var now = Date.now();
       if (!deadline || deadline <= now) {
-        deadline = now + hours * 3600 * 1000;
+        deadline = now + minutes * 60 * 1000;
         try { localStorage.setItem(key, String(deadline)); } catch (e) {}
       }
       var el = document.getElementById('offerTimer');
@@ -3166,7 +3166,7 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
       function tick() {
         var diff = deadline - Date.now();
         if (diff <= 0) {
-          deadline = Date.now() + hours * 3600 * 1000;
+          deadline = Date.now() + minutes * 60 * 1000;
           try { localStorage.setItem(key, String(deadline)); } catch (e) {}
           diff = deadline - Date.now();
         }
