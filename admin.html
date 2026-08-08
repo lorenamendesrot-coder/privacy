@@ -1363,6 +1363,7 @@ async function addBulk() {
 }
 
 function detectType(url) {
+  if (/turbo\.cr\/embed|streamtape\.com\/e\/|mixdrop\.co\/e\/|\/embed\//i.test(url)) return 'video';
   const ext = url.split('?')[0].split('.').pop().toLowerCase();
   if (['mp4','mov','avi','webm','mkv','m4v'].includes(ext)) return 'video';
   if (['jpg','jpeg','png','gif','webp','avif'].includes(ext)) return 'photo';

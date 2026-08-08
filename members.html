@@ -778,8 +778,8 @@ function buildSlide(v, i, total) {
   slide.dataset.index = i;
 
   var isYt     = v.url && /youtube\.com|youtu\.be/i.test(v.url);
-  var isEmbed  = v.url && /turbo\.cr\/embed|streamtape\.com\/e\/|mixdrop\.co\/e\/|player\.|\/embed\//i.test(v.url) && !isYt;
-  var isVideo  = v.url && (/\.(mp4|webm|mov)/i.test(v.url) || v.type === 'video' || v.type === 'paid') && !isEmbed;
+  var isEmbed  = v.url && /turbo\.cr\/embed|streamtape\.com\/e\/|mixdrop\.co\/e\/|\/embed\//i.test(v.url) && !isYt;
+  var isVideo  = v.url && (/\.(mp4|webm|mov)/i.test(v.url) || v.type === 'video' || v.type === 'paid') && !isEmbed && !isYt;
 
   // Background / thumb
   if (v.thumbnail) {
