@@ -777,8 +777,9 @@ function buildSlide(v, i, total) {
   slide.className = 'short-slide';
   slide.dataset.index = i;
 
-  var isYt    = v.url && /youtube\.com|youtu\.be/i.test(v.url);
-  var isVideo = v.url && (/\.(mp4|webm|mov)/i.test(v.url) || v.type === 'video' || v.type === 'paid');
+  var isYt     = v.url && /youtube\.com|youtu\.be/i.test(v.url);
+  var isEmbed  = v.url && /turbo\.cr\/embed|streamtape\.com\/e\/|mixdrop\.co\/e\/|player\.|\/embed\//i.test(v.url) && !isYt;
+  var isVideo  = v.url && (/\.(mp4|webm|mov)/i.test(v.url) || v.type === 'video' || v.type === 'paid') && !isEmbed;
 
   // Background / thumb
   if (v.thumbnail) {
@@ -805,6 +806,15 @@ function buildSlide(v, i, total) {
     iframe.dataset.ytSrc = iframe.src;
     iframe.dataset.ytAutoSrc = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&mute=0&playsinline=1&rel=0&modestbranding=1';
     slide.appendChild(iframe);
+  } else if (isEmbed) {
+    var embedFrame = document.createElement('iframe');
+    embedFrame.className = 'short-video-iframe';
+    embedFrame.src = v.url;
+    embedFrame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+    embedFrame.allowFullscreen = true;
+    embedFrame.setAttribute('allowfullscreen', '');
+    embedFrame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;';
+    slide.appendChild(embedFrame);
   } else if (isVideo) {
     var vid = document.createElement('video');
     vid.className = 'short-video';
@@ -924,8 +934,15 @@ function onSlideChange(idx) {
     var iframe = slide.querySelector('iframe');
     if (vid) vid.pause();
     if (iframe && Math.abs(i - idx) > 1) {
-      // Reset iframe away from view (stop audio)
-      iframe.src = iframe.dataset.ytSrc || iframe.src;
+      // Reset iframe away from view (stop audio) — YouTube e embeds genéricos
+      if (iframe.dataset.ytSrc) {
+        iframe.src = iframe.dataset.ytSrc;
+      } else {
+        // Para embeds genéricos (turbo.cr etc), recarrega para pausar
+        var embedSrc = iframe.src;
+        iframe.src = '';
+        iframe.src = embedSrc;
+      }
     }
   });
 
