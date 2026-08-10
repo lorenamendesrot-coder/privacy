@@ -2446,10 +2446,7 @@ main.wrap{
 </style>
 <link rel="stylesheet" href="responsive.css">
 </head>
-<body
-  data-sb-url="https://ackovomkgkmjfhoidwti.supabase.co"
-  data-sb-anon="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFja292b21rZ2ttamZob2lkd3RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMDE5ODQsImV4cCI6MjA5NTU3Nzk4NH0.ofFVhY0Q7xHiekYZUiPHiDANbR8Q8W4W4RP-y9DTg0g"
->
+<body>
 <div class="appbar" id="main-navbar">
   <div class="wrap" style="position:relative">
 
@@ -3122,64 +3119,8 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 </script>
 
 <script>
-// ── Função global: Já tem cadastro? Acesse aqui ─────────────
-function abrirLoginExistente() {
-  var SB_URL  = document.querySelector('[data-sb-url]') ? document.querySelector('[data-sb-url]').dataset.sbUrl : null;
-  var SB_ANON = document.querySelector('[data-sb-anon]') ? document.querySelector('[data-sb-anon]').dataset.sbAnon : null;
 
-  // Pega session do localStorage
-  var session = null;
-  try { var s = JSON.parse(localStorage.getItem('mbr_session') || '{}'); session = (s.access_token || (s.session && s.session.access_token)) ? s : null; } catch(e) {}
-
-  var modal = document.getElementById('payModal');
-  var ag    = document.getElementById('authGateStep');
-  var ps    = document.getElementById('paymentStep');
-
-  if (!modal || !ag) { console.warn('Modal não encontrado'); return; }
-
-  // Se já logado, verifica acesso
-  if (session && SB_URL && SB_ANON) {
-    var email = session.user && session.user.email;
-    if (email) {
-      fetch(SB_URL + '/rest/v1/access_tokens?payer_email=eq.' + encodeURIComponent(email) + '&expires_at=gt.' + new Date().toISOString() + '&select=token&limit=1', {
-        headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
-      })
-      .then(function(r) { return r.ok ? r.json() : []; })
-      .then(function(rows) {
-        if (rows && rows.length && rows[0].token) {
-          window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
-        } else {
-          // Abre modal no login para relogar ou trocar conta
-          abrirModalLogin();
-        }
-      })
-      .catch(function() { abrirModalLogin(); });
-      return;
-    }
-  }
-
-  abrirModalLogin();
-}
-
-function abrirModalLogin() {
-  var modal = document.getElementById('payModal');
-  var ag    = document.getElementById('authGateStep');
-  var ps    = document.getElementById('paymentStep');
-
-  if (!modal || !ag) return;
-
-  ag.style.display = '';
-  if (ps) ps.style.display = 'none';
-
-  modal.classList.add('show');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  setTimeout(function() {
-    if (typeof agSwitchToLogin === 'function') agSwitchToLogin();
-  }, 80);
-}
-</script>
+// ── CARREGA CONFIG DO PERFIL (direto do Supabase) ──
 (function () {
   // Carrega perfil via worker — ele sabe o MODEL_ID pelo env var do deploy
   fetch('/api/admin-profile')
