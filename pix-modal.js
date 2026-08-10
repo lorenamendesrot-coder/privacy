@@ -10,7 +10,8 @@
   var _selectedPlanCode = '';
   var _timerInterval = null;
   var _pollingInterval = null;
-  var _pixLoading = false; // guard contra chamadas duplicadas
+  var _pixLoading   = false; // guard contra chamadas duplicadas
+  var _pixGenerated = false; // PIX foi gerado com sucesso
 
   // ── Carrega gateway_config via /api/admin-profile (separado por modelo) ──
   function loadGwConfig() {
@@ -52,7 +53,24 @@
   window._pixDirectOpen = window.openPayModal;
 
   // ── Fecha modal ─────────────────────────────────────────
+  var _pixConfirmed = false;
+
   function fecharModal() {
+    // Bloqueia fechar se PIX foi gerado e ainda não foi confirmado
+    if (_pixLoading || (_pixGenerated && !_pixConfirmed)) {
+      // Mostra aviso sutil
+      var status = document.getElementById('pixStatus');
+      if (status) {
+        var orig = status.textContent;
+        status.textContent = '⚠️ Aguarde a confirmação do pagamento antes de sair.';
+        status.style.color = '#e05252';
+        setTimeout(function() {
+          status.textContent = orig;
+          status.style.color = '';
+        }, 3000);
+      }
+      return;
+    }
     var modal = document.getElementById('payModal');
     if (!modal) return;
     modal.classList.remove('show');
@@ -61,7 +79,9 @@
     if (_timerInterval)  { clearInterval(_timerInterval);  _timerInterval  = null; }
     if (_pollingInterval) { clearInterval(_pollingInterval); _pollingInterval = null; }
     _pixLoading = false;
-    _gwConfig = null; // limpa cache para sempre buscar config atualizada
+    _pixGenerated = false;
+    _pixConfirmed = false;
+    _gwConfig = null;
   }
 
   // ── Reset visual (NÃO toca em _pixLoading) ──────────────
@@ -180,6 +200,7 @@
 
             // Redireciona após 1.5s para dar tempo do usuário ver o feedback
             setTimeout(function () {
+              _pixConfirmed = true; // libera fechamento
               window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
             }, 1500);
           }
@@ -211,6 +232,7 @@
 
     result.innerHTML = html;
     window._pixCode = data.pix_code || '';
+    _pixGenerated = true; // bloqueia fechamento do modal
     startTimer('pixTimer', 30 * 60);
   }
 

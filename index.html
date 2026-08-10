@@ -2535,6 +2535,14 @@ main.wrap{
   </a>
 
 </div>
+
+<!-- Botão Já tem cadastro -->
+<div style="text-align:center;padding:12px 0 4px">
+  <button onclick="abrirLoginExistente()" type="button"
+    style="background:none;border:none;color:var(--text-dim,#999);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;text-decoration:underline;padding:4px 8px">
+    Já tem cadastro? Acesse aqui
+  </button>
+</div>
 <div class="offer-card" id="offerCard" style="display:none">
   <div class="offer-card-head"><span class="offer-card-icon">✨</span> Oferta de assinatura</div>
   <div class="offer-timer" id="offerTimer" style="display:none"></div>
@@ -3000,7 +3008,44 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
   // Intercepta openPayModal — usa setTimeout para garantir que pix-modal.js já executou
   var _origOpen = null;
-  window.addEventListener('load', function() {
+  // Botão "Já tem cadastro? Acesse aqui"
+  window.abrirLoginExistente = function() {
+    // Se já está logado, verifica acesso direto
+    if (getSession()) {
+      var session = getSession();
+      var email = session && session.user && session.user.email;
+      if (email) {
+        fetch(SB_URL + '/rest/v1/access_tokens?payer_email=eq.' + encodeURIComponent(email) + '&expires_at=gt.' + new Date().toISOString() + '&select=token&limit=1', {
+          headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON }
+        })
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(rows) {
+          if (rows && rows.length && rows[0].token) {
+            window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
+          } else {
+            alert('Nenhum acesso ativo encontrado para esse e-mail.');
+          }
+        });
+      }
+      return;
+    }
+
+    // Não logado — abre modal no tab de login
+    var modal = document.getElementById('payModal');
+    if (modal) {
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    var ag = document.getElementById('authGateStep');
+    var ps = document.getElementById('paymentStep');
+    if (ag) ag.style.display = '';
+    if (ps) ps.style.display = 'none';
+    // Vai direto para o tab de login
+    setTimeout(function() { if (typeof agSwitchToLogin === 'function') agSwitchToLogin(); }, 50);
+  };
+
+
     _origOpen = window._pixModalOpen || null;
   });
 
