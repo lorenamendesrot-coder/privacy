@@ -3023,27 +3023,40 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
           if (rows && rows.length && rows[0].token) {
             window.location.href = '/members.html?token=' + encodeURIComponent(rows[0].token);
           } else {
-            alert('Nenhum acesso ativo encontrado para esse e-mail.');
+            showToastMain('Nenhum acesso ativo. Adquira um plano abaixo.');
           }
         });
       }
       return;
     }
 
-    // Não logado — abre modal no tab de login
+    // Não logado — abre modal direto no login
     var modal = document.getElementById('payModal');
-    if (modal) {
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-    }
     var ag = document.getElementById('authGateStep');
     var ps = document.getElementById('paymentStep');
-    if (ag) ag.style.display = '';
+
+    if (!modal || !ag) return;
+
+    // Mostra authGateStep, esconde paymentStep
+    ag.style.display = '';
     if (ps) ps.style.display = 'none';
+
+    // Abre o modal
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
     // Vai direto para o tab de login
-    setTimeout(function() { if (typeof agSwitchToLogin === 'function') agSwitchToLogin(); }, 50);
+    setTimeout(function() { if (typeof agSwitchToLogin === 'function') agSwitchToLogin(); }, 80);
   };
+
+  function showToastMain(msg) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
 
 
     _origOpen = window._pixModalOpen || null;
